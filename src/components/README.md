@@ -1,0 +1,22 @@
+# 컴포넌트 구조 규약
+
+이 하네스(design → frontend)는 **중복 없는 재사용 컴포넌트 라이브러리**를 지향한다.
+컴포넌트는 두 계층으로 나눈다.
+
+```
+src/components/
+├─ ui/          # 범용 프리미티브 — Button, Input, Card, Badge, Avatar …
+│               #   여러 화면/도메인에서 재사용. 도메인 지식 없음.
+│               #   variant는 class-variance-authority(cva)로 표현.
+└─ {domain}/    # 도메인 합성 컴포넌트 — StatCard, UserMenu, ProductList …
+                #   ui 프리미티브를 조합. 특정 기능 영역에 종속.
+```
+
+## 원칙
+- **재사용 먼저.** 새 컴포넌트를 만들기 전 `ui/`와 도메인 폴더에 이미 있는지 확인한다.
+- **2회 반복이면 추출**, 1회용 레이아웃은 페이지에 인라인(과도한 추상화 금지).
+- **variant는 cva + `cn()`**(`@/lib/utils`). 조건부 className을 손으로 잇지 않는다.
+- **스타일은 `@theme` 토큰**(`src/app/globals.css`). 하드코딩 hex/px 금지.
+- **페이지는 조립만.** `src/app/**`의 page는 컴포넌트를 조합하고 로직/마크업 중복을 두지 않는다.
+
+이 규약은 `.claude/skills/component-reuse-design`과 `.claude/skills/nextjs-implementation`이 강제한다.
