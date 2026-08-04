@@ -1,15 +1,20 @@
 @import "tailwindcss";
 
+/* ============================================================
+   디자인 토큰 (Design Tokens)
+   ------------------------------------------------------------
+   이 프로젝트는 Tailwind v4다. 토큰은 tailwind.config.js가 아니라
+   여기 @theme 블록에 CSS 변수로 정의한다. @theme에 정의하면
+   Tailwind가 대응 유틸리티를 자동 생성한다:
+     --color-primary  → bg-primary / text-primary / border-primary
+     --radius-card    → rounded-card
+   Claude Design에서 넘어오는 새 토큰은 component-architect의 계획에 따라
+   이 블록에 추가한다. 컴포넌트에서는 하드코딩 hex/px 대신 이 토큰을 쓴다.
+   ============================================================ */
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,8 +24,18 @@
   }
 }
 
+@theme inline {
+  /* 색상 — Claude Design 팔레트를 여기에 매핑/추가한다 */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* 폰트 */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
