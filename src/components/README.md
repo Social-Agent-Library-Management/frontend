@@ -35,10 +35,12 @@ src/components/
 | `Card` | `ui` | `padding`(sm·md·lg), `noPadding`, `titleAs`(h2·h3) | `#3` |
 | `Pagination` | `ui` | (내부 PageButton `state`: default·active) | `#3` |
 | `DataTable` | `ui` | 없음 (제네릭 `T` — columns/rows 주도) | `#3` |
+| `PagePlaceholder` | `ui` | 없음 (`title` / `description` prop) | `#5` |
 | `StatusBadge` | `library` | `status` 7종 → Badge `tone` 매핑, `size` 위임 | `#3` |
 | `StatCard` | `library` | `tone`(primary·success·warning·danger·copy·neutral) × `subTone`(muted·success·warning·danger·primary) | `#3` |
 | `DdayCard` | `library` | `urgency`(urgent·warning·normal — `daysLeft`에서 파생) | `#3` |
 | `Sidebar` | `library` | nav item `active`(true·false) | `#3` |
+| `AppSidebar` | `library` | 없음 (`Sidebar`에 위임) | `#5` |
 | `icons/*` | `icons` | 없음 (`IconProps` = SVG props, `currentColor`) | `#3` |
 
 > 계층: `ui`(프리미티브) 또는 도메인명(예: `dashboard`). variant는 cva로 정의된 축(예: `tone`, `size`). 최초 도입은 이슈/PR 번호(예: `#5`).
@@ -49,6 +51,12 @@ src/components/
 - `DdayCard` → `Badge`(solid) + `IconBox` + `IconCalendar` + `lib/dday`
 - `StatCard` → `IconBox`
 - `Sidebar` → `IconBox` + `icons` + `nav-items`
+- `AppSidebar` → `Sidebar` + `resolveActiveNavId`  (**레이아웃에서는 `Sidebar`를 직접 쓰지 말고 `AppSidebar`를 쓸 것** — activeId를 손으로 계산하지 않는다)
+- `PagePlaceholder` → `Card`
 - `DataTable` → `Pagination`  (페이지네이션이 필요하면 `Pagination`을 직접 쓸 것)
 
 파생 로직은 `src/lib/dday.ts`(`getUrgency` / `formatDday`)에 있다. 연체 관련 화면은 이 함수를 재사용한다.
+
+라우트 경로는 `src/components/library/nav-items.tsx`의 `LIBRARY_NAV_ITEMS[].href`가 단일 진실 원천이다. 새 화면을 추가하면 여기에 항목을 넣고 `src/app/**`에 대응 라우트를 만든다.
+
+`PagePlaceholder`는 화면 구현 전 스캐폴딩이다. 모든 화면이 구현되어 사용처가 0이 되면 삭제한다.
