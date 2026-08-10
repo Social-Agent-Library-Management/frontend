@@ -17,7 +17,7 @@ const twMerge = extendTailwindMerge({
       ],
       "font-size": [{ text: ["2xs", "md", "body"] }],
       leading: [{ leading: ["cozy"] }],
-      shadow: [{ shadow: ["focus-ring"] }],
+      shadow: [{ shadow: ["focus-ring", "dropdown"] }],
       w: [{ w: ["sidebar"] }],
       "min-w": [{ "min-w": ["sidebar"] }],
       h: [{ h: ["header", "nav-item"] }],

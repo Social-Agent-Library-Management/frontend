@@ -33,6 +33,22 @@ export interface DataTableProps<T extends Record<string, unknown>> {
   onRowClick?: (row: T, index: number) => void;
   /** 페이지당 행 수. 지정하면 클라이언트 페이지네이션 + 푸터가 렌더된다. */
   pageSize?: number;
+  /**
+   * 서버 페이지네이션(controlled). 지정하면 rows를 슬라이스하지 않고 그대로 렌더하고,
+   * 페이지 상태는 호출부가 소유한다. `pageSize`(클라이언트 모드)와 함께 주면 이 prop이 우선한다.
+   */
+  serverPagination?: {
+    /** 1-based 현재 페이지 */
+    page: number;
+    pageSize: number;
+    /** 전체 항목 수 (= pagination.totalElements) */
+    total: number;
+    onPageChange: (page: number) => void;
+  };
+  /** 데이터 로딩 중 여부 */
+  loading?: boolean;
+  /** loading이고 rows가 비었을 때 표시할 문구 */
+  loadingText?: string;
   /** 스크린리더용 표 설명 */
   caption?: string;
   className?: string;
@@ -54,6 +70,11 @@ function toNode(value: unknown): React.ReactNode {
  * 원본의 `Record<string, any>`를 제네릭 `T`로 바꿔 renderCell 사용처에서
  * 타입 안전성을 유지한다. 행 hover는 `useState` 대신 `hover:` 유틸리티로 처리한다.
  * 페이지네이션은 `ui/pagination.tsx` 프리미티브를 합성한다.
+ *
+ * 페이지네이션 모드는 둘이다.
+ * - `pageSize` — 클라이언트. 전체 rows를 받아 내부에서 슬라이스하고 페이지 상태도 소유한다.
+ * - `serverPagination` — 서버. rows가 이미 현재 페이지 분량이므로 슬라이스하지 않는다.
+ *   목록 화면에서 `Pagination`을 표 아래에 손으로 붙이지 말고 이 prop을 쓴다.
  */
 export function DataTable<T extends Record<string, unknown>>({
   columns,
@@ -62,19 +83,25 @@ export function DataTable<T extends Record<string, unknown>>({
   emptyText = "데이터가 없습니다.",
   onRowClick,
   pageSize,
+  serverPagination,
+  loading = false,
+  loadingText = "불러오는 중…",
   caption,
   className,
 }: DataTableProps<T>) {
   const [page, setPage] = React.useState(1);
 
-  const paginated = typeof pageSize === "number" && pageSize > 0;
+  const server = serverPagination;
+  const paginated = !server && typeof pageSize === "number" && pageSize > 0;
   const total = rows.length;
-  const totalPages = paginated ? Math.max(1, Math.ceil(total / pageSize)) : 1;
+  const totalPages =
+    paginated && pageSize ? Math.max(1, Math.ceil(total / pageSize)) : 1;
 
   // 행 수나 페이지 크기가 바뀌면 첫 페이지로 되돌린다(원본 useEffect와 동일한 동작).
   // useEffect 대신 렌더 중 조정 패턴을 쓴다 — 이펙트로 하면 잘못된 페이지가 한 번
   // 그려진 뒤 다시 렌더되는 캐스케이딩 렌더가 발생한다.
-  const resetKey = `${total}:${pageSize ?? 0}`;
+  // 훅은 조건부 호출이 금지되므로 useState는 그대로 두고 계산만 분기한다.
+  const resetKey = server ? "server" : `${total}:${pageSize ?? 0}`;
   const [prevResetKey, setPrevResetKey] = React.useState(resetKey);
   const needsReset = resetKey !== prevResetKey;
   if (needsReset) {
@@ -83,15 +110,22 @@ export function DataTable<T extends Record<string, unknown>>({
   }
 
   const current = Math.min(needsReset ? 1 : page, totalPages);
-  const start = paginated ? (current - 1) * pageSize : 0;
+  const start = paginated && pageSize ? (current - 1) * pageSize : 0;
   const visibleRows =
     paginated && pageSize ? rows.slice(start, start + pageSize) : rows;
 
   const clickable = Boolean(onRowClick);
+  // 첫 로드(행 0)는 빈 셀에 문구, 페이지 이동(행 있음)은 표를 흐리게 — 스켈레톤을 쓰지 않는다.
+  const dimmed = loading && rows.length > 0;
 
   return (
-    <div className={cn("w-full", className)}>
-      <div className="w-full overflow-x-auto">
+    <div className={cn("w-full", className)} aria-busy={loading || undefined}>
+      <div
+        className={cn(
+          "w-full overflow-x-auto",
+          dimmed && "opacity-60 transition-opacity",
+        )}
+      >
         <table className="w-full table-auto border-collapse">
           {caption ? <caption className="sr-only">{caption}</caption> : null}
 
@@ -117,7 +151,7 @@ export function DataTable<T extends Record<string, unknown>>({
                   colSpan={columns.length}
                   className="px-4 py-12 text-center text-body text-fg-muted"
                 >
-                  {emptyText}
+                  {loading ? loadingText : emptyText}
                 </td>
               </tr>
             ) : (
@@ -172,7 +206,16 @@ export function DataTable<T extends Record<string, unknown>>({
         </table>
       </div>
 
-      {paginated && pageSize && total > 0 ? (
+      {server ? (
+        server.total > 0 ? (
+          <Pagination
+            page={server.page}
+            pageSize={server.pageSize}
+            total={server.total}
+            onPageChange={server.onPageChange}
+          />
+        ) : null
+      ) : paginated && pageSize && total > 0 ? (
         <Pagination
           page={current}
           pageSize={pageSize}

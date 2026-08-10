@@ -38,6 +38,19 @@ function IconBase({
   );
 }
 
+/**
+ * 크기를 호출부가 정하는 아이콘의 props.
+ *
+ * 기존 내비게이션 아이콘들은 20×20 한 가지 크기로만 쓰여 `size`를 노출하지 않는다.
+ * 아래 알림용 아이콘 3종은 `Toast`가 18/16px로 축소해 쓰므로 `size`를 받는다.
+ * 이때 `viewBox`를 20 고정으로 덮어써야 20 좌표계로 그린 도형이 잘리지 않고
+ * 그대로 축소된다(`IconBase`는 기본적으로 viewBox를 size에 맞춘다).
+ */
+export type SizedIconProps = IconProps & {
+  /** 정사각 픽셀 크기. 기본 20 */
+  size?: number;
+};
+
 export function IconDashboard(props: IconProps) {
   return (
     <IconBase {...props}>
@@ -125,6 +138,36 @@ export function IconLogout(props: IconProps) {
     <IconBase size={16} {...props}>
       <path d="M10 3h3a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-3" />
       <path d="M7 5l-3 3 3 3M4 8h8" strokeLinejoin="round" />
+    </IconBase>
+  );
+}
+
+/** 성공 알림용 — 원 + 체크 (`Toast` tone="success") */
+export function IconCheckCircle({ size = 20, ...props }: SizedIconProps) {
+  return (
+    <IconBase size={size} viewBox="0 0 20 20" {...props}>
+      <circle cx="10" cy="10" r="7" />
+      <path d="M6.6 10.2l2.3 2.3 4.5-4.8" strokeLinejoin="round" />
+    </IconBase>
+  );
+}
+
+/** 실패 알림용 — 원 + 느낌표 (`Toast` tone="danger") */
+export function IconAlertCircle({ size = 20, ...props }: SizedIconProps) {
+  return (
+    <IconBase size={size} viewBox="0 0 20 20" {...props}>
+      <circle cx="10" cy="10" r="7" />
+      <path d="M10 6.2v4.6" />
+      <path d="M10 13.4v.4" strokeWidth="2" />
+    </IconBase>
+  );
+}
+
+/** 닫기 — X 두 선 (`Toast` 닫기 버튼) */
+export function IconClose({ size = 20, ...props }: SizedIconProps) {
+  return (
+    <IconBase size={size} viewBox="0 0 20 20" {...props}>
+      <path d="M5.5 5.5l9 9M14.5 5.5l-9 9" />
     </IconBase>
   );
 }
