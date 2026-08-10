@@ -34,13 +34,18 @@ src/components/
 | `Input` | `ui` | `invalid`(error prop에서 파생) | `#3` |
 | `Card` | `ui` | `padding`(sm·md·lg), `noPadding`, `titleAs`(h2·h3) | `#3` |
 | `Pagination` | `ui` | (내부 PageButton `state`: default·active) | `#3` |
-| `DataTable` | `ui` | 없음 (제네릭 `T` — columns/rows 주도) | `#3` |
+| `DataTable` | `ui` | 없음 (제네릭 `T` — columns/rows 주도. 페이지네이션은 `pageSize`=클라이언트 / `serverPagination`=서버) | `#3` |
 | `PagePlaceholder` | `ui` | 없음 (`title` / `description` prop) | `#5` |
+| `PageHeader` | `ui` | 없음 (`title` / `description` / `actions` prop) | `#7` |
+| `Toast` | `ui` | `tone`(success·danger) | `#7` |
 | `StatusBadge` | `library` | `status` 7종 → Badge `tone` 매핑, `size` 위임 | `#3` |
 | `StatCard` | `library` | `tone`(primary·success·warning·danger·copy·neutral) × `subTone`(muted·success·warning·danger·primary) | `#3` |
 | `DdayCard` | `library` | `urgency`(urgent·warning·normal — `daysLeft`에서 파생) | `#3` |
 | `Sidebar` | `library` | nav item `active`(true·false) | `#3` |
 | `AppSidebar` | `library` | 없음 (`Sidebar`에 위임) | `#5` |
+| `BookRegisterForm` | `library` | 없음 | `#7` |
+| `BookListCard` | `library` | 없음 | `#7` |
+| `BookRegisterSection` | `library` | 없음 | `#7` |
 | `icons/*` | `icons` | 없음 (`IconProps` = SVG props, `currentColor`) | `#3` |
 
 > 계층: `ui`(프리미티브) 또는 도메인명(예: `dashboard`). variant는 cva로 정의된 축(예: `tone`, `size`). 최초 도입은 이슈/PR 번호(예: `#5`).
@@ -52,8 +57,16 @@ src/components/
 - `StatCard` → `IconBox`
 - `Sidebar` → `IconBox` + `icons` + `nav-items`
 - `AppSidebar` → `Sidebar` + `resolveActiveNavId`  (**레이아웃에서는 `Sidebar`를 직접 쓰지 말고 `AppSidebar`를 쓸 것** — activeId를 손으로 계산하지 않는다)
-- `PagePlaceholder` → `Card`
-- `DataTable` → `Pagination`  (페이지네이션이 필요하면 `Pagination`을 직접 쓸 것)
+- `PagePlaceholder` → `PageHeader` + `Card`
+- `Toast` → `IconCheckCircle` / `IconAlertCircle` / `IconClose`
+- `BookRegisterSection` → `BookRegisterForm` + `BookListCard`  (**페이지에서 폼·목록을 직접 배치하지 말 것** — refreshToken 배선을 손으로 하지 않는다)
+- `BookRegisterForm` → `Card` + `Input` + `Button` + `Toast` + `lib/api/books`
+- `BookListCard` → `Card` + `Badge` + `DataTable` + `lib/api/books`
+- `DataTable` → `Pagination`  (**서버 페이지네이션이 필요하면 `serverPagination` prop을 쓸 것** — `Pagination`을 표 아래에 따로 붙이지 않는다)
+
+페이지 좌우/상하 여백은 `src/app/layout.tsx`의 `<main>`이 소유한다. 페이지·컴포넌트에서 `px-page-x py-page-y`를 다시 쓰지 않는다.
+
+백엔드 호출은 `src/lib/api/`(`client.ts` 공통 + 도메인별 파일)를 통해서만 한다. 컴포넌트에서 `fetch`를 직접 부르지 않는다. 에러는 `ApiError`로 정규화되며 사용자 노출 문구는 `error.detail`이다.
 
 파생 로직은 `src/lib/dday.ts`(`getUrgency` / `formatDday`)에 있다. 연체 관련 화면은 이 함수를 재사용한다.
 
