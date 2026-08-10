@@ -1,41 +1,159 @@
 @import "tailwindcss";
 
 /* ============================================================
-   디자인 토큰 (Design Tokens)
+   디자인 토큰 (Design Tokens) — 도서 관리 시스템
    ------------------------------------------------------------
    이 프로젝트는 Tailwind v4다. 토큰은 tailwind.config.js가 아니라
    여기 @theme 블록에 CSS 변수로 정의한다. @theme에 정의하면
    Tailwind가 대응 유틸리티를 자동 생성한다:
      --color-primary  → bg-primary / text-primary / border-primary
      --radius-card    → rounded-card
-   Claude Design에서 넘어오는 새 토큰은 component-architect의 계획에 따라
-   이 블록에 추가한다. 컴포넌트에서는 하드코딩 hex/px 대신 이 토큰을 쓴다.
+     --spacing-sidebar→ w-sidebar / min-w-sidebar
+   주의: v4는 "테마 네임스페이스"가 유틸리티를 결정한다. 원본 디자인의
+   --font-size-* / --letter-spacing-* / --line-height-* 는 v4 네임스페이스가
+   아니므로 --text-* / --tracking-* / --leading-* 로 옮겨 정의했다.
+   컴포넌트에서는 하드코딩 hex/px 대신 이 토큰을 쓴다.
    ============================================================ */
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* ── 색상: Primary ──────────────────────────────────── */
+  --color-primary: #007aff;
+  --color-primary-hover: #0062cc;
+  --color-primary-light: #e5f0ff;
+  --color-primary-muted: rgba(0, 122, 255, 0.1);
+
+  /* ── 색상: 배경 / 표면 ──────────────────────────────── */
+  /* 원본 --color-bg → canvas (bg-canvas). --color-background 와의 충돌 회피 */
+  --color-canvas: #f2f2f7;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f9f9fb;
+
+  /* ── 색상: 경계선 ───────────────────────────────────── */
+  --color-line: #e5e5ea;
+  --color-line-strong: #c7c7cc;
+
+  /* ── 색상: 전경(텍스트) ─────────────────────────────── */
+  /* 원본 --color-text-* → fg-*. text-primary(브랜드색)와의 충돌 회피 */
+  --color-fg: #1c1c1e;
+  --color-fg-muted: #8e8e93;
+  --color-fg-subtle: #c7c7cc;
+  --color-fg-inverse: #ffffff;
+
+  /* ── 색상: 시맨틱 ───────────────────────────────────── */
+  --color-success: #34c759;
+  --color-success-light: #e5ffe9;
+  --color-success-hover: #28a745; /* Button success hover (원본 하드코딩 흡수) */
+
+  --color-danger: #ff3b30;
+  --color-danger-light: #ffe5e5;
+  --color-danger-hover: #d93025; /* Button danger hover (원본 하드코딩 흡수) */
+
+  --color-warning: #ff9500;
+  --color-warning-light: #fff0d6;
+  --color-warning-bg: #fffaf0;
+
+  --color-copy: #5856d6;
+  --color-copy-light: #ede5ff;
+
+  /* ── 색상: D-day 카드 긴급도 배경 ───────────────────── */
+  --color-urgent-bg: #fff5f5;
+  --color-normal-bg: var(--color-surface-muted); /* 값 동일 → 참조로 정의해 드리프트 방지 */
+
+  /* ── 타이포: 크기 (Tailwind 기본 스케일을 디자인 값으로 덮어씀) ── */
+  --text-2xs: 10px; /* Badge sm — 원본 토큰 세트에 없어 신설 */
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 14px; /* 신규 키 */
+  --text-body: 15px; /* 신규 키 */
+  --text-lg: 17px;
+  --text-xl: 18px;
+  --text-2xl: 22px;
+  --text-3xl: 28px;
+
+  /* Tailwind 기본 스케일에 딸려 오는 line-height 짝(--text-*--line-height)을 해제한다.
+     해제하지 않으면 text-sm 같이 기본 키를 덮어쓴 유틸리티만 1.43의 행간을 함께 얹어
+     신규 키(text-md/text-body)와 동작이 갈린다. 원본 디자인도 font-size만 지정했다.
+     → 크기는 text-*, 행간은 leading-* 로 역할을 분리한다. */
+  --text-xs--line-height: initial;
+  --text-sm--line-height: initial;
+  --text-base--line-height: initial;
+  --text-lg--line-height: initial;
+  --text-xl--line-height: initial;
+  --text-2xl--line-height: initial;
+  --text-3xl--line-height: initial;
+
+  /* ── 타이포: 굵기 ───────────────────────────────────── */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ── 타이포: 자간 ───────────────────────────────────── */
+  --tracking-tight: -0.03em;
+  --tracking-normal: -0.01em;
+
+  /* ── 타이포: 행간 ───────────────────────────────────── */
+  --leading-tight: 1.2;
+  --leading-snug: 1.3;
+  --leading-cozy: 1.4; /* 신규 — 라벨/힌트/테이블 셀 실사용값 */
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  /* ── 반경 (시맨틱 별칭) ─────────────────────────────── */
+  /* --radius-sm(4px)/--radius-full은 Tailwind 기본값과 동일해 재정의하지 않는다 */
+  --radius-button: 8px;
+  --radius-input: 8px;
+  --radius-card: 12px;
+  --radius-badge: 9999px;
+  --radius-logo: 10px;
+  --radius-modal: 16px;
+  --radius-dday: 8px;
+
+  /* ── 스페이싱 (오프그리드 / 레이아웃 상수만) ────────── */
+  /* 4px 그리드(--space-1…16)는 Tailwind 기본 스케일과 값이 동일해 정의하지 않는다 */
+  --spacing-input-x: 14px;
+  --spacing-sidebar: 260px;
+  --spacing-header: 72px;
+  --spacing-nav-item: 44px;
+  --spacing-page-x: 40px;
+  --spacing-page-y: 32px;
+
+  /* ── 그림자 ─────────────────────────────────────────── */
+  /* focus-ring 외에는 현재 적용처 없음 — "No drop shadows" 원칙. 파운데이션 완결성 위해 정의만 한다 */
+  --shadow-focus-ring: 0 0 0 3px rgba(0, 122, 255, 0.12);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-login: 0 8px 40px rgba(0, 0, 0, 0.12);
+  --shadow-dropdown: 0 4px 16px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* next/font 변수를 참조하므로 inline 필요 */
+@theme inline {
+  --font-sans: var(--font-noto-sans-kr), "Apple SD Gothic Neo", -apple-system,
+    BlinkMacSystemFont, "Malgun Gothic", sans-serif;
+}
+
+/* ============================================================
+   커스텀 유틸리티
+   ------------------------------------------------------------
+   포커스 인디케이터. Button / Sidebar nav item / logout /
+   Pagination / 클릭 가능 table row가 공유한다.
+   (디자인 원본에는 outline:none만 있었으나 키보드 접근성 기본기)
+   ============================================================ */
+@utility focus-ring {
+  outline: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
 }
 
-@theme inline {
-  /* 색상 — Claude Design 팔레트를 여기에 매핑/추가한다 */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-
-  /* 폰트 */
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-body {
-  background: var(--color-background);
-  color: var(--color-foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+@layer base {
+  body {
+    @apply bg-canvas text-fg font-sans;
+  }
 }

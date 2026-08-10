@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# design-to-frontend harness scratch (pipeline artifacts, not shipped code)
+/_workspace/
