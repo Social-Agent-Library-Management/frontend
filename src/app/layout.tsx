@@ -41,7 +41,12 @@ export default function RootLayout({
           본문 바로가기
         </a>
         <AppSidebar />
-        <main id="main-content" className="flex-1 overflow-y-auto bg-canvas">
+        {/* 페이지 좌우/상하 여백은 여기가 단일 진실 원천이다.
+            페이지·컴포넌트에서 px-page-x py-page-y를 다시 쓰지 말 것. */}
+        <main
+          id="main-content"
+          className="flex-1 overflow-y-auto bg-canvas px-5 py-6 sm:px-page-x sm:py-page-y"
+        >
           {children}
         </main>
       </body>
