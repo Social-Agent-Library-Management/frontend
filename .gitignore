@@ -42,3 +42,4 @@ next-env.d.ts
 
 # design-to-frontend harness scratch (pipeline artifacts, not shipped code)
 /_workspace/
+/_workspace_*/
