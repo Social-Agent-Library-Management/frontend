@@ -1,9 +1,9 @@
 "use client";
 
-import * as React from "react";
+import type * as React from "react";
 import { cva } from "class-variance-authority";
 
-import { cn } from "@/lib/utils";
+import { Field, useFieldIds } from "@/components/ui/field";
 
 export const inputVariants = cva(
   [
@@ -35,6 +35,13 @@ export interface InputProps extends Omit<React.ComponentProps<"input">, "size"> 
   error?: string;
 }
 
+/**
+ * 텍스트 입력 필드.
+ *
+ * 라벨/힌트/에러 껍데기와 id·aria 배선은 `ui/field.tsx`에 위임한다
+ * (`Combobox`가 같은 껍데기를 쓴다 — 복제하면 두 필드의 에러 표기가 갈라진다).
+ * 이 파일은 입력창 자체의 스타일(`inputVariants`)만 소유한다.
+ */
 export function Input({
   className,
   label,
@@ -44,51 +51,25 @@ export function Input({
   id,
   ...props
 }: InputProps) {
-  // 원본은 모듈 전역 카운터(`let _idCounter = 0`)로 id를 만들었는데,
-  // SSR과 CSR의 카운터 값이 어긋나 하이드레이션 미스매치를 낸다. useId()로 교체.
-  const reactId = React.useId();
-  const inputId = id ?? `input-${reactId}`;
-  const hintId = `${inputId}-hint`;
-  const errorId = `${inputId}-error`;
-
-  const invalid = Boolean(error);
+  const { controlId, describedBy, invalid } = useFieldIds(id, { hint, error });
 
   return (
-    <div className={cn("flex w-full flex-col gap-1.5", className)}>
-      {label ? (
-        <label
-          htmlFor={inputId}
-          className="text-base leading-cozy font-semibold tracking-normal text-fg"
-        >
-          {label}
-          {required ? (
-            <span className="ml-0.5 text-danger" aria-hidden="true">
-              *
-            </span>
-          ) : null}
-        </label>
-      ) : null}
-
+    <Field
+      className={className}
+      controlId={controlId}
+      label={label}
+      required={required}
+      hint={hint}
+      error={error}
+    >
       <input
-        id={inputId}
+        id={controlId}
         required={required}
         aria-invalid={invalid}
-        aria-describedby={invalid ? errorId : hint ? hintId : undefined}
+        aria-describedby={describedBy}
         className={inputVariants({ invalid })}
         {...props}
       />
-
-      {hint && !invalid ? (
-        <span id={hintId} className="text-sm leading-cozy text-fg-muted">
-          {hint}
-        </span>
-      ) : null}
-
-      {invalid ? (
-        <span id={errorId} className="text-sm leading-cozy text-danger">
-          {error}
-        </span>
-      ) : null}
-    </div>
+    </Field>
   );
 }
