@@ -31,7 +31,9 @@ src/components/
 | `IconBox` | `ui` | `size`(sm·md·lg) × `shape`(circle·rounded) | `#3` |
 | `Badge` | `ui` | `variant`(soft·solid) × `tone`(neutral·primary·success·warning·danger·copy·muted) × `size`(sm·md·lg) | `#3` |
 | `Button` | `ui` | `variant`(primary·secondary·ghost·danger·success) × `size`(sm·md·lg) × `fullWidth` | `#3` |
-| `Input` | `ui` | `invalid`(error prop에서 파생) | `#3` |
+| `Input` | `ui` | `invalid`(error prop에서 파생) — 껍데기는 `Field`에 위임 | `#3` |
+| `Field` | `ui` | 없음 (`label`/`hint`/`error`/`required`/`controlId` — hint↔error 배타 렌더) | `#9` |
+| `Combobox` | `ui` | 옵션 `active`(true·false) × `selected`(true·false) (cva). 입력창은 `Input`의 `inputVariants` 재사용 | `#9` |
 | `Card` | `ui` | `padding`(sm·md·lg), `noPadding`, `titleAs`(h2·h3) | `#3` |
 | `Pagination` | `ui` | (내부 PageButton `state`: default·active) | `#3` |
 | `DataTable` | `ui` | 없음 (제네릭 `T` — columns/rows 주도. 페이지네이션은 `pageSize`=클라이언트 / `serverPagination`=서버) | `#3` |
@@ -46,6 +48,8 @@ src/components/
 | `BookRegisterForm` | `library` | 없음 | `#7` |
 | `BookListCard` | `library` | 없음 | `#7` |
 | `BookRegisterSection` | `library` | 없음 | `#7` |
+| `BookSelectField` | `library` | 없음 | `#9` |
+| `CopyRegisterForm` | `library` | 없음 | `#9` |
 | `icons/*` | `icons` | 없음 (`IconProps` = SVG props, `currentColor`) | `#3` |
 
 > 계층: `ui`(프리미티브) 또는 도메인명(예: `dashboard`). variant는 cva로 정의된 축(예: `tone`, `size`). 최초 도입은 이슈/PR 번호(예: `#5`).
@@ -61,8 +65,14 @@ src/components/
 - `Toast` → `IconCheckCircle` / `IconAlertCircle` / `IconClose`
 - `BookRegisterSection` → `BookRegisterForm` + `BookListCard`  (**페이지에서 폼·목록을 직접 배치하지 말 것** — refreshToken 배선을 손으로 하지 않는다)
 - `BookRegisterForm` → `Card` + `Input` + `Button` + `Toast` + `lib/api/books`
+- `Input` → `Field`
+- `Combobox` → `Field` + `Input`의 `inputVariants`  (**검색형 선택 UI를 새로 만들지 말 것** — 라벨/힌트/에러 껍데기와 리스트박스 ARIA·키보드 처리가 이미 여기 있다)
+- `BookSelectField` → `Combobox` + `lib/api/books`(`searchBooks`)  (**도서 선택 UI가 필요하면 이걸 쓸 것** — 디바운스·요청 취소·경합 처리를 손으로 하지 않는다)
+- `CopyRegisterForm` → `Card` + `BookSelectField` + `Input` + `StatusBadge` + `Button` + `Toast` + `lib/api/bookitems`
 - `BookListCard` → `Card` + `Badge` + `DataTable` + `lib/api/books`
 - `DataTable` → `Pagination`  (**서버 페이지네이션이 필요하면 `serverPagination` prop을 쓸 것** — `Pagination`을 표 아래에 따로 붙이지 않는다)
+
+`ui/Combobox`는 도메인을 모르는 검색-선택 프리미티브다. 새 검색 필드가 필요하면 `ui/`에 두 번째 콤보박스를 만들지 말고, `library/`에 `BookSelectField`처럼 API 배선만 하는 얇은 래퍼를 추가한다. (`/loans/new`의 소장본·회원 선택이 이 경로를 쓴다.)
 
 페이지 좌우/상하 여백은 `src/app/layout.tsx`의 `<main>`이 소유한다. 페이지·컴포넌트에서 `px-page-x py-page-y`를 다시 쓰지 않는다.
 
