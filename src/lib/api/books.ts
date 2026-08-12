@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api/client";
+import { apiFetch, type PaginationMeta } from "@/lib/api/client";
 
 /**
  * ⚠️ 아래 행 타입은 반드시 `interface`가 아니라 `type` 별칭으로 선언한다.
@@ -17,12 +17,8 @@ export type Book = BookListItem & {
   createdAt: string;
 };
 
-export type PaginationMeta = {
-  page: number;
-  pageSize: number;
-  totalPages: number;
-  totalElements: number;
-};
+/** 페이지네이션 봉투는 도메인 공통이라 `client.ts`가 소유한다. 기존 임포트 경로 유지를 위해 재수출만 한다. */
+export type { PaginationMeta };
 
 export type BookSearchResult = {
   books: BookListItem[];
