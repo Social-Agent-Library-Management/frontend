@@ -68,9 +68,22 @@ export type SearchLoansParams = {
   pageSize?: number;
 };
 
+export type ReturnLoanResult = {
+  loanId: number;
+  managementNumber: string;
+  loanDate: string;
+  dueDate: string;
+  returnedAt: string | null;
+  status: LoanStatus;
+  /** 연체 없이 반납했으면 null */
+  overdueDays: number | null;
+};
+
 /** 백엔드 LoanError 코드 (`books.ts`의 DUPLICATE_ISBN_CODE 네이밍 관례를 따른다) */
 export const BOOK_ITEM_NOT_FOUND_CODE = "BOOK_ITEM_NOT_FOUND";
 export const BOOK_ITEM_NOT_AVAILABLE_CODE = "BOOK_ITEM_NOT_AVAILABLE";
+export const LOAN_NOT_FOUND_CODE = "LOAN_NOT_FOUND";
+export const LOAN_NOT_ON_LOAN_CODE = "LOAN_NOT_ON_LOAN";
 
 /** POST /loans — 201 LoanResponse */
 export function createLoan(
@@ -95,6 +108,22 @@ export function searchLoans(
       page: params.page,
       pageSize: params.pageSize,
     },
+    signal,
+  });
+}
+
+/**
+ * POST /loans/{loanId}/return — 반납 처리.
+ *
+ * 실제 반납일은 항상 서버가 오늘 날짜로 기록한다(디자인에 반납일 입력 필드가 없다) —
+ * 바디 없이 호출한다.
+ */
+export function returnLoan(
+  loanId: number,
+  signal?: AbortSignal,
+): Promise<ReturnLoanResult> {
+  return apiFetch<ReturnLoanResult>(`/loans/${loanId}/return`, {
+    method: "POST",
     signal,
   });
 }
