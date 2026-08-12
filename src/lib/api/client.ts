@@ -27,6 +27,18 @@ export type ProblemDetail = {
   traceId: string | null;
 };
 
+/**
+ * 백엔드 목록 응답의 공통 `pagination` 봉투.
+ * 도서·대출 등 도메인마다 같은 모양이라 도메인 파일에 복제하지 않고 여기서 한 번만 정의한다.
+ */
+export type PaginationMeta = {
+  /** 1-based */
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  totalElements: number;
+};
+
 export const NETWORK_ERROR_CODE = "NETWORK_ERROR";
 export const UNKNOWN_ERROR_CODE = "UNKNOWN_ERROR";
 
