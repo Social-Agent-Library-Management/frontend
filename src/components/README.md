@@ -50,6 +50,9 @@ src/components/
 | `BookRegisterSection` | `library` | 없음 | `#7` |
 | `BookSelectField` | `library` | 없음 | `#9` |
 | `CopyRegisterForm` | `library` | 없음 | `#9` |
+| `LoanRegisterForm` | `library` | 없음 | `#11` |
+| `LoanListCard` | `library` | 없음 | `#11` |
+| `LoanRegisterSection` | `library` | 없음 | `#11` |
 | `icons/*` | `icons` | 없음 (`IconProps` = SVG props, `currentColor`) | `#3` |
 
 > 계층: `ui`(프리미티브) 또는 도메인명(예: `dashboard`). variant는 cva로 정의된 축(예: `tone`, `size`). 최초 도입은 이슈/PR 번호(예: `#5`).
@@ -70,13 +73,16 @@ src/components/
 - `BookSelectField` → `Combobox` + `lib/api/books`(`searchBooks`)  (**도서 선택 UI가 필요하면 이걸 쓸 것** — 디바운스·요청 취소·경합 처리를 손으로 하지 않는다)
 - `CopyRegisterForm` → `Card` + `BookSelectField` + `Input` + `StatusBadge` + `Button` + `Toast` + `lib/api/bookitems`
 - `BookListCard` → `Card` + `Badge` + `DataTable` + `lib/api/books`
+- `LoanRegisterSection` → `LoanRegisterForm` + `LoanListCard`  (**페이지에서 폼·목록을 직접 배치하지 말 것** — refreshToken 배선을 손으로 하지 않는다)
+- `LoanRegisterForm` → `Card` + `Input` + `Button` + `Toast` + `IconCalendar` + `lib/api/loans`  (관리번호는 plain `Input`이다 — 아래 검색형 선택 문단 참조)
+- `LoanListCard` → `Card` + `DataTable` + `StatusBadge` + `lib/api/loans`  (연체 배지는 서버가 내려준 `overdue`를 그대로 쓴다 — 프론트에서 날짜를 재계산하지 않는다)
 - `DataTable` → `Pagination`  (**서버 페이지네이션이 필요하면 `serverPagination` prop을 쓸 것** — `Pagination`을 표 아래에 따로 붙이지 않는다)
 
-`ui/Combobox`는 도메인을 모르는 검색-선택 프리미티브다. 새 검색 필드가 필요하면 `ui/`에 두 번째 콤보박스를 만들지 말고, `library/`에 `BookSelectField`처럼 API 배선만 하는 얇은 래퍼를 추가한다. (`/loans/new`의 소장본·회원 선택이 이 경로를 쓴다.)
+`ui/Combobox`는 도메인을 모르는 검색-선택 프리미티브다. 새 검색 필드가 필요하면 `ui/`에 두 번째 콤보박스를 만들지 말고, `library/`에 `BookSelectField`처럼 API 배선만 하는 얇은 래퍼를 추가한다. **단, 검색 엔드포인트가 있을 때만이다** — `/loans/new`의 관리번호는 백엔드에 소장본 검색/목록 API가 없어(`findByManagementNumber` 단건 조회뿐) plain `Input` + 서버 에러 코드(`BOOK_ITEM_NOT_FOUND`/`BOOK_ITEM_NOT_AVAILABLE`) 필드 에러로 처리한다(`#11`). 대출자·부서도 "회원" 도메인이 없어 자유 텍스트다.
 
 페이지 좌우/상하 여백은 `src/app/layout.tsx`의 `<main>`이 소유한다. 페이지·컴포넌트에서 `px-page-x py-page-y`를 다시 쓰지 않는다.
 
-백엔드 호출은 `src/lib/api/`(`client.ts` 공통 + 도메인별 파일)를 통해서만 한다. 컴포넌트에서 `fetch`를 직접 부르지 않는다. 에러는 `ApiError`로 정규화되며 사용자 노출 문구는 `error.detail`이다.
+백엔드 호출은 `src/lib/api/`(`client.ts` 공통 + 도메인별 파일)를 통해서만 한다. 컴포넌트에서 `fetch`를 직접 부르지 않는다. 에러는 `ApiError`로 정규화되며 사용자 노출 문구는 `error.detail`이다. 목록 응답의 `pagination` 봉투 타입(`PaginationMeta`)도 도메인 공통이라 `client.ts`가 소유한다 — 도메인 파일에 복제하지 않는다.
 
 파생 로직은 `src/lib/dday.ts`(`getUrgency` / `formatDday`)에 있다. 연체 관련 화면은 이 함수를 재사용한다.
 
