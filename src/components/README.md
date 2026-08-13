@@ -40,6 +40,7 @@ src/components/
 | `PagePlaceholder` | `ui` | 없음 (`title` / `description` prop) | `#5` |
 | `PageHeader` | `ui` | 없음 (`title` / `description` / `actions` prop) | `#7` |
 | `Toast` | `ui` | `tone`(success·danger) | `#7` |
+| `ListErrorState` | `ui` | 없음 (`message` / `onRetry` / `retryLabel` prop) | `#17` |
 | `StatusBadge` | `library` | `status` 7종 → Badge `tone` 매핑, `size` 위임 | `#3` |
 | `StatCard` | `library` | `tone`(primary·success·warning·danger·copy·neutral) × `subTone`(muted·success·warning·danger·primary) | `#3` |
 | `DdayCard` | `library` | `urgency`(urgent·warning·normal — `daysLeft`에서 파생) | `#3` |
@@ -55,6 +56,7 @@ src/components/
 | `LoanRegisterSection` | `library` | 없음 | `#11` |
 | `ReturnListCard` | `library` | 없음 | `#13` |
 | `LoanHistoryCard` | `library` | 없음 | `#15` |
+| `OverdueListCard` | `library` | 없음 | `#17` |
 | `icons/*` | `icons` | 없음 (`IconProps` = SVG props, `currentColor`) | `#3` |
 
 > 계층: `ui`(프리미티브) 또는 도메인명(예: `dashboard`). variant는 cva로 정의된 축(예: `tone`, `size`). 최초 도입은 이슈/PR 번호(예: `#5`).
@@ -83,6 +85,13 @@ src/components/
 - `LoanListCard` / `LoanHistoryCard` → `library/loan-table.ts`(`LOAN_COLUMNS`, `toLoanBadgeStatus`)  (**대출 표의 컬럼·상태 매핑을 화면에서 다시 정의하지 말 것** — 컬럼 폭과 배지 라벨이 화면마다 갈라진다. `ReturnListCard`도 배지 매핑만 공유한다 — 컬럼은 액션 열이 있어 별도다)
 - `BookSelectField` / `LoanHistoryCard` → `lib/use-debounced-value.ts`  (**디바운스를 컴포넌트에 인라인하지 말 것** — 지연 시간이 화면마다 갈라진다)
 - `DataTable` → `Pagination`  (**서버 페이지네이션이 필요하면 `serverPagination` prop을 쓸 것** — `Pagination`을 표 아래에 따로 붙이지 않는다)
+- `OverdueListCard` → `Card` + `Input` + `Button` + `Badge` + `DataTable` + `ListErrorState`
+  + `lib/api/loans`(`searchOverdueLoans`) + `lib/use-debounced-value`
+  (연체 컬럼 정의 `OVERDUE_LOAN_COLUMNS`는 이 파일 모듈 스코프에 둔다 — 행 타입이 `LoanSummary`가
+   아니라 `loan-table.ts`에 올리면 억지 일반화다. `overdueDays`는 서버 계산값이며 프론트에서
+   날짜로 재계산하지 않는다. 경과일수는 `Badge`가 아니라 plain 강조 텍스트다 — pill은 상태 어휘 전용)
+- `BookListCard` / `LoanListCard` / `ReturnListCard` / `LoanHistoryCard` / `OverdueListCard` → `ui/ListErrorState`
+  (**목록 조회 실패 UI를 카드마다 다시 마크업하지 말 것** — 문구·여백·재시도 버튼이 화면마다 갈라진다)
 
 `ui/Combobox`는 도메인을 모르는 검색-선택 프리미티브다. 새 검색 필드가 필요하면 `ui/`에 두 번째 콤보박스를 만들지 말고, `library/`에 `BookSelectField`처럼 API 배선만 하는 얇은 래퍼를 추가한다. **단, 검색 엔드포인트가 있을 때만이다** — `/loans/new`의 관리번호는 백엔드에 소장본 검색/목록 API가 없어(`findByManagementNumber` 단건 조회뿐) plain `Input` + 서버 에러 코드(`BOOK_ITEM_NOT_FOUND`/`BOOK_ITEM_NOT_AVAILABLE`) 필드 에러로 처리한다(`#11`). 대출자·부서도 "회원" 도메인이 없어 자유 텍스트다.
 
