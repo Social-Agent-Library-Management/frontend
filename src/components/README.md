@@ -54,6 +54,7 @@ src/components/
 | `LoanListCard` | `library` | 없음 | `#11` |
 | `LoanRegisterSection` | `library` | 없음 | `#11` |
 | `ReturnListCard` | `library` | 없음 | `#13` |
+| `LoanHistoryCard` | `library` | 없음 | `#15` |
 | `icons/*` | `icons` | 없음 (`IconProps` = SVG props, `currentColor`) | `#3` |
 
 > 계층: `ui`(프리미티브) 또는 도메인명(예: `dashboard`). variant는 cva로 정의된 축(예: `tone`, `size`). 최초 도입은 이슈/PR 번호(예: `#5`).
@@ -78,6 +79,9 @@ src/components/
 - `LoanRegisterForm` → `Card` + `Input` + `Button` + `Toast` + `IconCalendar` + `lib/api/loans`  (관리번호는 plain `Input`이다 — 아래 검색형 선택 문단 참조)
 - `LoanListCard` → `Card` + `DataTable` + `StatusBadge` + `lib/api/loans`  (연체 배지는 서버가 내려준 `overdue`를 그대로 쓴다 — 프론트에서 날짜를 재계산하지 않는다)
 - `ReturnListCard` → `Card` + `Input` + `DataTable` + `StatusBadge` + `Button` + `Toast` + `lib/api/loans`(`returnLoan`)  (반납 처리 후 낙관적으로 행을 바꾸지 않고 재조회한다 — `LoanListCard`와 동일 원칙. 관리번호 검색은 백엔드 `/loans`가 지원하지 않아 ON_LOAN 전체를 받아 클라이언트에서 필터링한다)
+- `LoanHistoryCard` → `Card` + `Input` + `Button` + `Badge` + `DataTable` + `StatusBadge` + `lib/api/loans` + `lib/use-debounced-value`  (상태 필터는 네이티브 `<select>` + `Input`의 `inputVariants`다 — **`ui/select.tsx`를 새로 만들지 말 것**. 코드베이스 유일한 select라 1회용으로 두었고, 두 번째 사용처가 생기면 그때 프리미티브로 승격한다)
+- `LoanListCard` / `LoanHistoryCard` → `library/loan-table.ts`(`LOAN_COLUMNS`, `toLoanBadgeStatus`)  (**대출 표의 컬럼·상태 매핑을 화면에서 다시 정의하지 말 것** — 컬럼 폭과 배지 라벨이 화면마다 갈라진다. `ReturnListCard`도 배지 매핑만 공유한다 — 컬럼은 액션 열이 있어 별도다)
+- `BookSelectField` / `LoanHistoryCard` → `lib/use-debounced-value.ts`  (**디바운스를 컴포넌트에 인라인하지 말 것** — 지연 시간이 화면마다 갈라진다)
 - `DataTable` → `Pagination`  (**서버 페이지네이션이 필요하면 `serverPagination` prop을 쓸 것** — `Pagination`을 표 아래에 따로 붙이지 않는다)
 
 `ui/Combobox`는 도메인을 모르는 검색-선택 프리미티브다. 새 검색 필드가 필요하면 `ui/`에 두 번째 콤보박스를 만들지 말고, `library/`에 `BookSelectField`처럼 API 배선만 하는 얇은 래퍼를 추가한다. **단, 검색 엔드포인트가 있을 때만이다** — `/loans/new`의 관리번호는 백엔드에 소장본 검색/목록 API가 없어(`findByManagementNumber` 단건 조회뿐) plain `Input` + 서버 에러 코드(`BOOK_ITEM_NOT_FOUND`/`BOOK_ITEM_NOT_AVAILABLE`) 필드 에러로 처리한다(`#11`). 대출자·부서도 "회원" 도메인이 없어 자유 텍스트다.
