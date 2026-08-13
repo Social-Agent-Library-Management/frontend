@@ -62,6 +62,14 @@ export type CreateLoanResult = {
 
 export type SearchLoansParams = {
   status?: LoanStatus;
+  /**
+   * 아래 세 필터는 서버 `LoanRepository.search`의 **부분 일치**이며 서로 AND로 묶인다.
+   * 빈 문자열은 `buildUrl`이 자동으로 누락시키므로 호출부에서 `|| undefined`를 덧대지 않는다.
+   * 다만 공백만 있는 값은 그대로 전송되므로 호출부가 `.trim()`한 값을 넘긴다.
+   */
+  bookTitle?: string;
+  borrowerName?: string;
+  department?: string;
   /** 1-based */
   page?: number;
   /** 기본 10 */
@@ -105,6 +113,9 @@ export function searchLoans(
   return apiFetch<LoanSearchResult>("/loans", {
     query: {
       status: params.status,
+      bookTitle: params.bookTitle,
+      borrowerName: params.borrowerName,
+      department: params.department,
       page: params.page,
       pageSize: params.pageSize,
     },
