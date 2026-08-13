@@ -8,6 +8,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Toast, type ToastTone } from "@/components/ui/toast";
 import { StatusBadge } from "@/components/library/status-badge";
+import { toLoanBadgeStatus } from "@/components/library/loan-table";
 import { isApiError } from "@/lib/api/client";
 import {
   returnLoan,
@@ -178,7 +179,9 @@ export function ReturnListCard({ className }: ReturnListCardProps) {
             pageSize={DISPLAY_PAGE_SIZE}
             renderCell={(col, value, row) => {
               if (col.key === "status") {
-                return <StatusBadge status={row.overdue ? "overdue" : "loaned"} />;
+                // 이 목록은 ON_LOAN만 조회하므로 3-state 매핑도 결과가 동일하다
+                // (`RETURNED` 분기에 걸리는 행이 없다).
+                return <StatusBadge status={toLoanBadgeStatus(row)} />;
               }
               if (col.key === "loanId") {
                 const processing = processingIds.has(row.loanId);
