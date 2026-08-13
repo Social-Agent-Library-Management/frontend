@@ -4,8 +4,9 @@ import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { StatusBadge, type BookStatus } from "@/components/library/status-badge";
+import { DataTable } from "@/components/ui/data-table";
+import { StatusBadge } from "@/components/library/status-badge";
+import { LOAN_COLUMNS, toLoanBadgeStatus } from "@/components/library/loan-table";
 import { isApiError } from "@/lib/api/client";
 import {
   searchLoans,
@@ -19,30 +20,6 @@ export interface LoanListCardProps {
   /** 페이지당 행 수. 기본 10 (API 기본값) */
   pageSize?: number;
   className?: string;
-}
-
-// 렌더마다 재생성되지 않도록 모듈 스코프에 둔다.
-const LOAN_COLUMNS: DataTableColumn<LoanSummary>[] = [
-  { key: "managementNumber", label: "관리번호", width: "14%", nowrap: true },
-  { key: "bookTitle", label: "도서명", width: "26%" },
-  { key: "borrowerName", label: "대출자", width: "12%" },
-  { key: "department", label: "부서", width: "14%", secondary: true },
-  { key: "loanDate", label: "대여일", width: "12%", secondary: true, nowrap: true },
-  { key: "dueDate", label: "반납예정일", width: "12%", secondary: true, nowrap: true },
-  { key: "status", label: "상태", width: "10%", nowrap: true },
-];
-
-/**
- * 상태 배지 매핑.
- *
- * 연체 판정은 **서버가 내려준 `overdue`를 그대로 신뢰**한다 — 프론트에서 오늘 날짜와
- * `dueDate`를 다시 비교하면 클라이언트 시계·타임존에 따라 서버와 결론이 갈린다.
- * 목록은 `status=ON_LOAN`으로 필터링하지만, 필터가 바뀌어도 라벨이 거짓말하지 않도록
- * 반납 건도 함께 매핑해 둔다.
- */
-function toBadgeStatus(row: LoanSummary): BookStatus {
-  if (row.status === "RETURNED") return "returned";
-  return row.overdue ? "overdue" : "loaned";
 }
 
 /**
@@ -123,7 +100,7 @@ export function LoanListCard({
           emptyText="현재 대출 중인 소장본이 없습니다."
           renderCell={(col, value, row) =>
             col.key === "status" ? (
-              <StatusBadge status={toBadgeStatus(row)} />
+              <StatusBadge status={toLoanBadgeStatus(row)} />
             ) : (
               (value as React.ReactNode)
             )
