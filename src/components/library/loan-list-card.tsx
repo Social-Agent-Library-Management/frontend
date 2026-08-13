@@ -2,9 +2,9 @@
 
 import * as React from "react";
 
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
+import { ListErrorState } from "@/components/ui/list-error-state";
 import { StatusBadge } from "@/components/library/status-badge";
 import { LOAN_COLUMNS, toLoanBadgeStatus } from "@/components/library/loan-table";
 import { isApiError } from "@/lib/api/client";
@@ -81,16 +81,7 @@ export function LoanListCard({
   return (
     <Card title="현재 대출 현황" titleAs="h2" noPadding className={className}>
       {error ? (
-        <div className="flex flex-col items-center gap-3 px-6 py-12 text-center">
-          <p className="text-body leading-normal text-fg-muted">{error}</p>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setRetry((n) => n + 1)}
-          >
-            다시 시도
-          </Button>
-        </div>
+        <ListErrorState message={error} onRetry={() => setRetry((n) => n + 1)} />
       ) : (
         <DataTable<LoanSummary>
           caption="현재 대출 중인 소장본 목록"
