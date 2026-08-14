@@ -1,6 +1,5 @@
 /**
- * 반납 기한(D-day) 파생 로직.
- * DdayCard 외에 연체 목록 화면에서도 같은 계산을 쓰므로 UI에서 분리했다.
+ * 반납 기한(D-day) 파생 로직. `DdayCard`가 사용하므로 UI에서 분리했다.
  */
 
 export type Urgency = "urgent" | "warning" | "normal";

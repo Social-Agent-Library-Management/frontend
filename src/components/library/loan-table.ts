@@ -18,9 +18,8 @@ import type { LoanSummary } from "@/lib/api/loans";
  *    다른 것은 폭과 반납일 컬럼 유무뿐이다. 한쪽만 고치지 말 것.
  *    셋째 컬럼셋이 필요해지면 그때 공통 정의 + 폭 주입으로 리팩터한다(지금은 과잉 추상화).
  *
- * 단, 아래 둘은 여기 두지 않는다(억지 일반화 금지).
- * - `ReturnListCard`의 `RETURN_COLUMNS` — 화면 전용 액션 컬럼이 있고 `loanDate`가 없다.
- * - `OverdueListCard`의 `OVERDUE_LOAN_COLUMNS` — 행 타입이 `OverdueLoanSummary`로 다르다.
+ * 단, `ReturnListCard`의 `RETURN_COLUMNS`는 여기 두지 않는다(억지 일반화 금지) —
+ * 화면 전용 액션 컬럼이 있고 `loanDate`가 없어 컬럼 집합 자체가 다르다.
  */
 
 /** 대출 현황(`LoanListCard`)용 7컬럼. 모듈 스코프 상수(렌더마다 재생성 금지). 폭 합계 100%. */

@@ -6,7 +6,6 @@ import {
   IconDashboard,
   IconHistory,
   IconLoan,
-  IconOverdue,
   IconReturn,
   type IconProps,
 } from "@/components/icons";
@@ -24,11 +23,14 @@ export interface LibraryNavItem {
 }
 
 /**
- * 도서 관리 시스템 기본 내비게이션 7종 (원본 SIDEBAR_NAV_ITEMS 순서·라벨 유지).
+ * 도서 관리 시스템 기본 내비게이션 6종 (원본 SIDEBAR_NAV_ITEMS 순서·라벨 유지).
  *
  * `href`는 앱 라우트의 단일 진실 원천이다. 새 화면을 추가할 때
  * 여기 항목을 넣고 `src/app/**`에 대응 라우트를 만든다.
  * 명명 규칙: 리소스 복수형 + 액션 세그먼트(등록 폼은 `/new`).
+ *
+ * "연체 목록"(`#17`) 항목은 `#21`에서 제거했다 — 대출 내역 조회 화면의 상태 필터로
+ * 완전히 흡수되는 중복 기능이라 기획에서 뺐다(`/loans/history?status=OVERDUE`와 동등).
  */
 export const LIBRARY_NAV_ITEMS: LibraryNavItem[] = [
   { id: "dashboard", label: "대시보드", Icon: IconDashboard, href: "/" },
@@ -57,7 +59,6 @@ export const LIBRARY_NAV_ITEMS: LibraryNavItem[] = [
     Icon: IconHistory,
     href: "/loans/history",
   },
-  { id: "overdue", label: "연체 목록", Icon: IconOverdue, href: "/overdue" },
 ];
 
 /** 끝의 `/`를 제거한다. 빈 문자열이 되면 루트(`"/"`)로 되돌린다. */
