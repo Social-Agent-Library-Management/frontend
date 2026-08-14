@@ -7,6 +7,7 @@ import {
   IconHistory,
   IconLoan,
   IconReturn,
+  IconSearch,
   type IconProps,
 } from "@/components/icons";
 
@@ -23,7 +24,10 @@ export interface LibraryNavItem {
 }
 
 /**
- * 도서 관리 시스템 기본 내비게이션 6종 (원본 SIDEBAR_NAV_ITEMS 순서·라벨 유지).
+ * 도서 관리 시스템 내비게이션 (원본 SIDEBAR_NAV_ITEMS 순서·라벨 유지 + 이후 추가분).
+ *
+ * 순서는 도메인 그룹(도서 → 소장본 → 대출 → 반납 → 이력)을 따르고, 그룹 안에서는
+ * 등록 → 조회 순이다 — "도서 검색"(`#23`)이 "도서 등록" 다음에 오는 이유다.
  *
  * `href`는 앱 라우트의 단일 진실 원천이다. 새 화면을 추가할 때
  * 여기 항목을 넣고 `src/app/**`에 대응 라우트를 만든다.
@@ -39,6 +43,12 @@ export const LIBRARY_NAV_ITEMS: LibraryNavItem[] = [
     label: "도서 등록",
     Icon: IconBook,
     href: "/books/new",
+  },
+  {
+    id: "book-search",
+    label: "도서 검색",
+    Icon: IconSearch,
+    href: "/books/search",
   },
   {
     id: "copy-register",

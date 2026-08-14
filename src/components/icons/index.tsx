@@ -112,6 +112,23 @@ export function IconHistory(props: IconProps) {
   );
 }
 
+/**
+ * 검색 — 돋보기.
+ *
+ * 사이드바(20px)와 검색 입력창(16px) 두 크기로 쓰이므로 `SizedIconProps`다.
+ * 원본 디자인은 16 격자였지만 nav 아이콘 6종과 시각 비중을 맞추려면 20 격자여야 한다.
+ * 정확한 1.25배 리스케일은 비정수 좌표(8.75 / 6.25)를 만들어 기존 아이콘의
+ * 0.5 단위 격자와 어긋나므로, 구성(좌상단 원 + 45° 손잡이)만 유지해 재작도했다.
+ */
+export function IconSearch({ size = 20, ...props }: SizedIconProps) {
+  return (
+    <IconBase size={size} viewBox="0 0 20 20" {...props}>
+      <circle cx="8.5" cy="8.5" r="6" />
+      <path d="M13 13l4 4" />
+    </IconBase>
+  );
+}
+
 export function IconCalendar(props: IconProps) {
   return (
     <IconBase {...props}>
