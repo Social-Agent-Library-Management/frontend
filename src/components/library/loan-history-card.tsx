@@ -9,12 +9,15 @@ import { DataTable } from "@/components/ui/data-table";
 import { Input, inputVariants } from "@/components/ui/input";
 import { ListErrorState } from "@/components/ui/list-error-state";
 import { StatusBadge } from "@/components/library/status-badge";
-import { LOAN_COLUMNS, toLoanBadgeStatus } from "@/components/library/loan-table";
+import {
+  LOAN_HISTORY_COLUMNS,
+  toLoanBadgeStatus,
+} from "@/components/library/loan-table";
 import { isApiError } from "@/lib/api/client";
 import {
   searchLoans,
   type LoanSearchResult,
-  type LoanStatus,
+  type LoanSearchStatus,
   type LoanSummary,
 } from "@/lib/api/loans";
 import { useDebouncedValue } from "@/lib/use-debounced-value";
@@ -26,18 +29,28 @@ export interface LoanHistoryCardProps {
   className?: string;
 }
 
-/** `"ALL"`은 UI 전용 값이다 — 서버 `status` 파라미터는 생략으로 번역한다. */
-type StatusFilter = "ALL" | LoanStatus;
+/**
+ * `"ALL"`은 UI 전용 값이다 — 서버 `status` 파라미터는 생략으로 번역한다.
+ * 나머지 세 값은 서버 검색 어휘(`LoanSearchStatus`)를 그대로 쓴다 — 행의 도메인 상태
+ * (`LoanStatus`, 2값)가 아니다.
+ */
+type StatusFilter = "ALL" | LoanSearchStatus;
 
 /**
- * "연체"는 옵션에 없다. 서버 `status`는 `ON_LOAN`/`RETURNED` 두 값뿐이고 연체는 행별
- * 파생 불리언(`overdue`)이라, 서버 페이지네이션 위에서 클라이언트가 다시 걸러내면
- * 표시 건수가 서버가 말한 `pageSize`와 어긋난다. 대신 **행의 연체 배지는 그대로 뜬다**
- * (`toLoanBadgeStatus`가 `overdue`를 반영). 서버 `overdue` 필터는 후속 이슈 대상.
+ * 상태 필터는 **전부 서버 필터**다(`GET /loans?status=`). 서버가 `OVERDUE`를
+ * `ON_LOAN && dueDate < 오늘`로 계산하므로 **클라이언트에서 다시 걸러내지 않는다** —
+ * 서버 페이지네이션 위에서 재필터링하면 표시 건수가 서버가 말한 `pageSize`와 어긋난다.
+ *
+ * `OVERDUE`는 `ON_LOAN`의 부분집합이다(상호배타 아님) — `ON_LOAN`("대출중")은 연체 건도
+ * 포함한 대출 중 전체이고, `OVERDUE`("연체")는 그중 기한이 지난 건만 좁혀 보는 필터다
+ * (`LoanSearchStatus` 주석 참조).
+ *
+ * 순서(전체 → 대출중 → 연체 → 반납완료)는 디자인 원본 `StatusSelect`를 따른다.
  */
 const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "ALL", label: "전체 상태" },
   { value: "ON_LOAN", label: "대출중" },
+  { value: "OVERDUE", label: "연체" },
   { value: "RETURNED", label: "반납완료" },
 ];
 
@@ -237,17 +250,28 @@ export function LoanHistoryCard({
         ) : (
           <DataTable<LoanSummary>
             caption="대출 내역 목록"
-            columns={LOAN_COLUMNS}
+            columns={LOAN_HISTORY_COLUMNS}
             rows={rows}
             loading={loading}
             emptyText="검색 결과가 없습니다."
-            renderCell={(col, value, row) =>
-              col.key === "status" ? (
-                <StatusBadge status={toLoanBadgeStatus(row)} />
-              ) : (
-                (value as React.ReactNode)
-              )
-            }
+            renderCell={(col, value, row) => {
+              if (col.key === "status") {
+                return <StatusBadge status={toLoanBadgeStatus(row)} />;
+              }
+              if (col.key === "returnedAt") {
+                // 미반납(대출중·연체)은 값이 없다. DataTable의 기본 렌더는 null을 빈 셀로
+                // 만들어 컬럼이 비어 보이므로, placeholder 톤 em dash로 "없음"을 명시한다.
+                // 배지·아이콘을 쓰지 않는다 — pill은 상태 어휘 전용이다.
+                if (row.returnedAt) return row.returnedAt;
+                return (
+                  <span className="text-fg-subtle">
+                    <span aria-hidden="true">—</span>
+                    <span className="sr-only">미반납</span>
+                  </span>
+                );
+              }
+              return value as React.ReactNode;
+            }}
             serverPagination={{ page, pageSize, total, onPageChange: setPage }}
           />
         )}
