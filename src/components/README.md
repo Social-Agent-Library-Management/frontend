@@ -81,8 +81,8 @@ src/components/
 - `LoanRegisterForm` → `Card` + `Input` + `Button` + `Toast` + `IconCalendar` + `lib/api/loans`  (관리번호는 plain `Input`이다 — 아래 검색형 선택 문단 참조)
 - `LoanListCard` → `Card` + `DataTable` + `StatusBadge` + `lib/api/loans`  (연체 배지는 서버가 내려준 `overdue`를 그대로 쓴다 — 프론트에서 날짜를 재계산하지 않는다)
 - `ReturnListCard` → `Card` + `Input` + `DataTable` + `StatusBadge` + `Button` + `Toast` + `lib/api/loans`(`returnLoan`)  (반납 처리 후 낙관적으로 행을 바꾸지 않고 재조회한다 — `LoanListCard`와 동일 원칙. 관리번호 검색은 백엔드 `/loans`가 지원하지 않아 ON_LOAN 전체를 받아 클라이언트에서 필터링한다)
-- `LoanHistoryCard` → `Card` + `Input` + `Button` + `Badge` + `DataTable` + `StatusBadge` + `lib/api/loans` + `lib/use-debounced-value`  (상태 필터는 네이티브 `<select>` + `Input`의 `inputVariants`다 — **`ui/select.tsx`를 새로 만들지 말 것**. 코드베이스 유일한 select라 1회용으로 두었고, 두 번째 사용처가 생기면 그때 프리미티브로 승격한다)
-- `LoanListCard` / `LoanHistoryCard` → `library/loan-table.ts`(`LOAN_COLUMNS`, `toLoanBadgeStatus`)  (**대출 표의 컬럼·상태 매핑을 화면에서 다시 정의하지 말 것** — 컬럼 폭과 배지 라벨이 화면마다 갈라진다. `ReturnListCard`도 배지 매핑만 공유한다 — 컬럼은 액션 열이 있어 별도다)
+- `LoanHistoryCard` → `Card` + `Input` + `Button` + `Badge` + `DataTable` + `StatusBadge` + `lib/api/loans` + `lib/use-debounced-value`  (상태 필터는 네이티브 `<select>` + `Input`의 `inputVariants`다 — **`ui/select.tsx`를 새로 만들지 말 것**. 코드베이스 유일한 select라 1회용으로 두었고, 두 번째 사용처가 생기면 그때 프리미티브로 승격한다. 옵션 4종(전체/대출중/연체/반납완료)은 **전부 서버 필터**(`status` 파라미터)다 — 연체를 클라이언트에서 다시 걸러내지 않는다. 반납일 빈 값 `—` 표기도 이 카드의 `renderCell` 1회용이다)
+- `LoanListCard` / `LoanHistoryCard` → `library/loan-table.ts`(`LOAN_COLUMNS`, `LOAN_HISTORY_COLUMNS`, `toLoanBadgeStatus`)  (**대출 표의 컬럼·상태 매핑을 화면에서 다시 정의하지 말 것** — 컬럼 폭과 배지 라벨이 화면마다 갈라진다. 행 타입이 `LoanSummary`인 컬럼셋은 전부 이 파일이 소유한다. 컬럼셋이 둘인 이유는 화면별 취향이 아니라 **집합이 다르기 때문**이다 — 대출 현황(`LOAN_COLUMNS`, 7컬럼)은 `status=ON_LOAN` 고정이라 `returnedAt`이 구조적으로 항상 null이라 반납일 컬럼이 없고, 대출 내역(`LOAN_HISTORY_COLUMNS`, 8컬럼, `#21`)은 반납 완료 건이 섞여 반납일이 있다(디자인도 두 화면을 다르게 그린다). 두 배열의 `label`/`secondary`/`nowrap`은 같은 키에 대해 항상 일치해야 하고 다른 것은 폭뿐이다 — 한쪽만 고치지 말 것. `ReturnListCard`(액션 컬럼)·`OverdueListCard`(행 타입이 다름)는 배지 매핑만 공유하고 컬럼은 각자 파일에 둔다)
 - `BookSelectField` / `LoanHistoryCard` → `lib/use-debounced-value.ts`  (**디바운스를 컴포넌트에 인라인하지 말 것** — 지연 시간이 화면마다 갈라진다)
 - `DataTable` → `Pagination`  (**서버 페이지네이션이 필요하면 `serverPagination` prop을 쓸 것** — `Pagination`을 표 아래에 따로 붙이지 않는다)
 - `OverdueListCard` → `Card` + `Input` + `Button` + `Badge` + `DataTable` + `ListErrorState`
@@ -97,7 +97,7 @@ src/components/
 
 페이지 좌우/상하 여백은 `src/app/layout.tsx`의 `<main>`이 소유한다. 페이지·컴포넌트에서 `px-page-x py-page-y`를 다시 쓰지 않는다.
 
-백엔드 호출은 `src/lib/api/`(`client.ts` 공통 + 도메인별 파일)를 통해서만 한다. 컴포넌트에서 `fetch`를 직접 부르지 않는다. 에러는 `ApiError`로 정규화되며 사용자 노출 문구는 `error.detail`이다. 목록 응답의 `pagination` 봉투 타입(`PaginationMeta`)도 도메인 공통이라 `client.ts`가 소유한다 — 도메인 파일에 복제하지 않는다.
+백엔드 호출은 `src/lib/api/`(`client.ts` 공통 + 도메인별 파일)를 통해서만 한다. 컴포넌트에서 `fetch`를 직접 부르지 않는다. 에러는 `ApiError`로 정규화되며 사용자 노출 문구는 `error.detail`이다. 목록 응답의 `pagination` 봉투 타입(`PaginationMeta`)도 도메인 공통이라 `client.ts`가 소유한다 — 도메인 파일에 복제하지 않는다. 검색 파라미터 타입과 행 타입은 서버가 별개 enum이면 프론트도 별개로 둔다 — `lib/api/loans.ts`의 `LoanSearchStatus`(3값: 검색 필터, `OVERDUE` 포함)와 `LoanStatus`(2값: 행의 도메인 상태)를 섞지 않는다.
 
 파생 로직은 `src/lib/dday.ts`(`getUrgency` / `formatDday`)에 있다. 연체 관련 화면은 이 함수를 재사용한다.
 
