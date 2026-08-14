@@ -107,47 +107,6 @@ export type ReturnLoanResult = {
   overdueDays: number | null;
 };
 
-/**
- * `GET /loans/overdue` 행 타입.
- *
- * `LoanSummary`와 필드 집합이 다르다 — 연체 건만 내려오므로 `status`/`returnedAt`/`overdue`가
- * 없고 대신 `overdueDays`가 있다. 재사용하지 않고 별도 타입으로 둔다.
- *
- * ⚠️ `interface`가 아니라 `type` 별칭이다(`LoanSummary`와 동일한 이유 —
- * `DataTable<T extends Record<string, unknown>>`의 암묵적 인덱스 시그니처 요구).
- */
-export type OverdueLoanSummary = {
-  loanId: number;
-  managementNumber: string;
-  bookTitle: string;
-  borrowerName: string;
-  department: string;
-  /** LocalDate "YYYY-MM-DD" */
-  loanDate: string;
-  /** LocalDate "YYYY-MM-DD" */
-  dueDate: string;
-  /** 서버가 조회 시점 기준으로 계산한 연체 경과일. **프론트에서 날짜로 재계산하지 않는다** */
-  overdueDays: number;
-};
-
-export type OverdueLoanSearchResult = {
-  loans: OverdueLoanSummary[];
-  pagination: PaginationMeta;
-};
-
-export type SearchOverdueLoansParams = {
-  /**
-   * 부서명 **부분 일치**. 빈 문자열은 `buildUrl`이 자동으로 누락시키므로 호출부에서
-   * `|| undefined`를 덧대지 않는다. 공백만 있는 값은 그대로 전송되므로 호출부가 `.trim()`한다.
-   * `/loans`와 달리 도서명·대출자·관리번호 필터는 서버가 지원하지 않는다.
-   */
-  department?: string;
-  /** 1-based */
-  page?: number;
-  /** 기본 10, 최대 100 */
-  pageSize?: number;
-};
-
 /** 백엔드 LoanError 코드 (`books.ts`의 DUPLICATE_ISBN_CODE 네이밍 관례를 따른다) */
 export const BOOK_ITEM_NOT_FOUND_CODE = "BOOK_ITEM_NOT_FOUND";
 export const BOOK_ITEM_NOT_AVAILABLE_CODE = "BOOK_ITEM_NOT_AVAILABLE";
@@ -176,26 +135,6 @@ export function searchLoans(
       status: params.status,
       bookTitle: params.bookTitle,
       borrowerName: params.borrowerName,
-      department: params.department,
-      page: params.page,
-      pageSize: params.pageSize,
-    },
-    signal,
-  });
-}
-
-/**
- * GET /loans/overdue — `status=ON_LOAN` && `dueDate < 오늘`인 건만.
- *
- * 정렬은 서버가 `dueDate` ASC, `id` ASC로 고정한다(요청 파라미터로 변경 불가) —
- * 프론트에 정렬 UI를 만들지 않는다.
- */
-export function searchOverdueLoans(
-  params: SearchOverdueLoansParams = {},
-  signal?: AbortSignal,
-): Promise<OverdueLoanSearchResult> {
-  return apiFetch<OverdueLoanSearchResult>("/loans/overdue", {
-    query: {
       department: params.department,
       page: params.page,
       pageSize: params.pageSize,

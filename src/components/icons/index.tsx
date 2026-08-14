@@ -112,16 +112,6 @@ export function IconHistory(props: IconProps) {
   );
 }
 
-export function IconOverdue(props: IconProps) {
-  return (
-    <IconBase {...props}>
-      <circle cx="10" cy="10" r="7" />
-      <path d="M10 6v5" />
-      <path d="M10 13.5v.5" strokeWidth="2" />
-    </IconBase>
-  );
-}
-
 export function IconCalendar(props: IconProps) {
   return (
     <IconBase {...props}>
