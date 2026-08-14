@@ -16,9 +16,19 @@ export interface BookRegisterFormProps {
   className?: string;
 }
 
-type BookRegisterFormValues = { title: string; author: string; isbn: string };
+type BookRegisterFormValues = {
+  title: string;
+  author: string;
+  publisher: string;
+  isbn: string;
+};
 
-const EMPTY_VALUES: BookRegisterFormValues = { title: "", author: "", isbn: "" };
+const EMPTY_VALUES: BookRegisterFormValues = {
+  title: "",
+  author: "",
+  publisher: "",
+  isbn: "",
+};
 
 type ToastState = { open: boolean; tone: ToastTone; message: string };
 
@@ -65,6 +75,7 @@ export function BookRegisterForm({
       const book = await createBook({
         title: values.title.trim(),
         author: values.author.trim(),
+        publisher: values.publisher.trim(),
         isbn: isbn === "" ? null : isbn,
       });
       setValues(EMPTY_VALUES);
@@ -110,6 +121,14 @@ export function BookRegisterForm({
             value={values.author}
             onChange={(e) => updateField("author", e.target.value)}
             placeholder="저자를 입력하세요"
+            autoComplete="off"
+          />
+          <Input
+            label="출판사"
+            required
+            value={values.publisher}
+            onChange={(e) => updateField("publisher", e.target.value)}
+            placeholder="출판사를 입력하세요"
             autoComplete="off"
           />
           <Input
