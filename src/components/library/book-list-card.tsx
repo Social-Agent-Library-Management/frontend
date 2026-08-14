@@ -21,10 +21,13 @@ export interface BookListCardProps {
 }
 
 // 렌더마다 재생성되지 않도록 모듈 스코프에 둔다.
+// 폭 합계 88%는 디자인 원본 그대로다 — `table-auto`가 잔여 폭을 분배한다.
 const BOOK_COLUMNS: DataTableColumn<BookListItem>[] = [
-  { key: "title", label: "도서명", width: "45%" },
-  { key: "author", label: "저자", width: "25%" },
-  { key: "isbn", label: "ISBN", width: "30%", secondary: true, nowrap: true },
+  { key: "title", label: "도서명", width: "28%" },
+  { key: "author", label: "저자", width: "14%" },
+  { key: "publisher", label: "출판사", width: "16%", secondary: true },
+  { key: "isbn", label: "ISBN", width: "20%", secondary: true, nowrap: true },
+  { key: "bookItemCount", label: "소장본 수", width: "10%" },
 ];
 
 /**
