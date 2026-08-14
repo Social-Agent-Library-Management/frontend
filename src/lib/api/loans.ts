@@ -12,6 +12,24 @@ import { apiFetch, type PaginationMeta } from "@/lib/api/client";
 export type LoanStatus = "ON_LOAN" | "RETURNED";
 
 /**
+ * `GET /loans`의 `status` 검색 파라미터 (백엔드 `SearchLoansService.LoanSearchStatus`).
+ *
+ * 행의 `LoanSummary.status`(`LoanStatus`, 2값)와 **다른 개념이다** — 서버에서도 별개 enum이다.
+ * "연체"는 저장된 상태가 아니라 `ON_LOAN && dueDate < 오늘`의 파생이고, 서버가 조회 시점에
+ * 계산한다. **클라이언트에서 다시 걸러내지 않는다** — 서버 페이지네이션과 건수가 어긋난다.
+ *
+ * `OVERDUE`는 `ON_LOAN`의 부분집합이다(상호배타가 아니다 — 서버 `LoanRepository.search`가
+ * `overdueOnly` 플래그로 좁힐 뿐 `ON_LOAN` 자체를 기한으로 걸러내지 않는다):
+ * - `ON_LOAN`  = 대출 중 전체 (연체 포함)
+ * - `OVERDUE`  = 대출 중 && `dueDate < 오늘`  (`ON_LOAN`의 부분집합)
+ * - `RETURNED` = 반납 완료 (기한 무관)
+ *
+ * `LoanStatus`에서 파생시키지 않는다(`LoanStatus | "OVERDUE"` ✗) — 서버에 없는 종속관계를
+ * 주장하게 되고, 도메인 상태가 늘어나면 검색 파라미터로 새어 든다.
+ */
+export type LoanSearchStatus = "ON_LOAN" | "OVERDUE" | "RETURNED";
+
+/**
  * ⚠️ 이 행 타입은 반드시 `interface`가 아니라 `type` 별칭으로 선언한다.
  * `DataTable<T extends Record<string, unknown>>` 제약은 암묵적 인덱스 시그니처를
  * 요구하는데, interface에는 그것이 없어 타입 에러가 난다(`books.ts`와 동일한 이유).
@@ -26,7 +44,7 @@ export type LoanSummary = {
   loanDate: string;
   /** LocalDate "YYYY-MM-DD" — 서버가 `loanDate + LOAN_PERIOD_DAYS`로 확정한 값 */
   dueDate: string;
-  /** LocalDateTime (ISO-ish). 미반납이면 null */
+  /** LocalDate "YYYY-MM-DD" — 실제 반납일. 미반납이면 null (서버도 `LocalDate?`다) */
   returnedAt: string | null;
   status: LoanStatus;
   /** 서버가 계산한 연체 여부. **프론트에서 날짜로 재계산하지 않는다** */
@@ -61,7 +79,8 @@ export type CreateLoanResult = {
 };
 
 export type SearchLoansParams = {
-  status?: LoanStatus;
+  /** 생략 = 전체 조회. `ON_LOAN`은 연체 건도 포함한 대출 중 전체다(`LoanSearchStatus` 주석 참조) */
+  status?: LoanSearchStatus;
   /**
    * 아래 세 필터는 서버 `LoanRepository.search`의 **부분 일치**이며 서로 AND로 묶인다.
    * 빈 문자열은 `buildUrl`이 자동으로 누락시키므로 호출부에서 `|| undefined`를 덧대지 않는다.
@@ -81,6 +100,7 @@ export type ReturnLoanResult = {
   managementNumber: string;
   loanDate: string;
   dueDate: string;
+  /** LocalDate "YYYY-MM-DD". 반납 실패 시 null */
   returnedAt: string | null;
   status: LoanStatus;
   /** 연체 없이 반납했으면 null */
