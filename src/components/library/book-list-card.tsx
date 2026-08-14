@@ -4,11 +4,9 @@ import * as React from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import {
-  DataTable,
-  type DataTableColumn,
-} from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { ListErrorState } from "@/components/ui/list-error-state";
+import { BOOK_COLUMNS, formatIsbn } from "@/components/library/book-table";
 import { isApiError } from "@/lib/api/client";
 import { searchBooks, type BookListItem, type BookSearchResult } from "@/lib/api/books";
 
@@ -19,16 +17,6 @@ export interface BookListCardProps {
   pageSize?: number;
   className?: string;
 }
-
-// 렌더마다 재생성되지 않도록 모듈 스코프에 둔다.
-// 폭 합계 88%는 디자인 원본 그대로다 — `table-auto`가 잔여 폭을 분배한다.
-const BOOK_COLUMNS: DataTableColumn<BookListItem>[] = [
-  { key: "title", label: "도서명", width: "28%" },
-  { key: "author", label: "저자", width: "14%" },
-  { key: "publisher", label: "출판사", width: "16%", secondary: true },
-  { key: "isbn", label: "ISBN", width: "20%", secondary: true, nowrap: true },
-  { key: "bookItemCount", label: "소장본 수", width: "10%" },
-];
 
 /**
  * 등록된 도서 목록 카드. 조회·페이지 상태·로딩/에러를 한 책임으로 묶는다.
@@ -106,9 +94,9 @@ export function BookListCard({
           columns={BOOK_COLUMNS}
           rows={rows}
           loading={loading}
-          renderCell={(col, value) =>
-            col.key === "isbn" && (value === null || value === "")
-              ? "—"
+          renderCell={(col, value, row) =>
+            col.key === "isbn"
+              ? formatIsbn(row.isbn)
               : (value as React.ReactNode)
           }
           serverPagination={{ page, pageSize, total, onPageChange: setPage }}
