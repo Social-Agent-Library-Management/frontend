@@ -9,7 +9,11 @@ export type BookListItem = {
   id: number;
   title: string;
   author: string;
+  /** 백엔드 Book 도메인상 non-blank(널 없음) */
+  publisher: string;
   isbn: string | null;
+  /** 활성(soft-delete 제외) 소장본 수 */
+  bookItemCount: number;
 };
 
 export type Book = BookListItem & {
@@ -28,6 +32,8 @@ export type BookSearchResult = {
 export type CreateBookInput = {
   title: string;
   author: string;
+  /** POST /books 계약상 필수(non-blank) */
+  publisher: string;
   isbn?: string | null;
 };
 
