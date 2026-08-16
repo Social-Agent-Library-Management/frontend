@@ -16,9 +16,12 @@ import {
   BOOK_NOT_FOUND_CODE,
   DUPLICATE_MANAGEMENT_NUMBER_CODE,
   INVALID_MANAGEMENT_NUMBER_FORMAT_CODE,
+  type BookItem,
 } from "@/lib/api/bookitems";
 
 export interface CopyRegisterFormProps {
+  /** 등록 성공 시 호출 (목록 refetch 트리거) */
+  onCreated?: (bookItem: BookItem) => void;
   /** Card에 전달되는 클래스 */
   className?: string;
 }
@@ -40,7 +43,10 @@ const CLOSED_TOAST: ToastState = {
  * 포커스 이동으로 처리한다. 관리번호는 네이티브 `required`가 담당하고,
  * "타이핑은 했지만 목록에서 고르지 않은" 사각지대만 handleSubmit이 잡는다.
  */
-export function CopyRegisterForm({ className }: CopyRegisterFormProps) {
+export function CopyRegisterForm({
+  onCreated,
+  className,
+}: CopyRegisterFormProps) {
   const [selectedBook, setSelectedBook] = React.useState<BookListItem | null>(
     null,
   );
@@ -87,7 +93,7 @@ export function CopyRegisterForm({ className }: CopyRegisterFormProps) {
 
     setSubmitting(true);
     try {
-      await createBookItem(selectedBook.id, {
+      const bookItem = await createBookItem(selectedBook.id, {
         managementNumber: managementNumber.trim(),
       });
       setSelectedBook(null);
@@ -97,6 +103,7 @@ export function CopyRegisterForm({ className }: CopyRegisterFormProps) {
         tone: "success",
         message: "소장본이 등록되었습니다.",
       });
+      onCreated?.(bookItem);
     } catch (error) {
       if (
         isApiError(error) &&

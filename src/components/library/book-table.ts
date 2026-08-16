@@ -1,14 +1,14 @@
 import type { DataTableColumn } from "@/components/ui/data-table";
 import type { BookStatus } from "@/components/library/status-badge";
 import type { BookItemSummary, BookListItem } from "@/lib/api/books";
-import type { BookItemStatus } from "@/lib/api/bookitems";
+import type { BookItemSearchRow, BookItemStatus } from "@/lib/api/bookitems";
 
 /**
  * 도서·소장본 표의 공용 정의. 컴포넌트가 아니므로 `"use client"`가 없다(순수 상수·순수 함수).
  *
- * `library/loan-table.ts`와 같은 역할이다 — 행 타입이 `BookListItem`/`BookItemSummary`인
- * 표의 컬럼 정의는 **전부 이 파일이 소유한다. 화면 파일에서 다시 정의하지 말 것.**
- * 두 벌이 되면 컬럼 폭과 라벨이 조용히 갈라진다.
+ * `library/loan-table.ts`와 같은 역할이다 — 행 타입이 `BookListItem`/`BookItemSummary`/
+ * `BookItemSearchRow`인 표의 컬럼 정의는 **전부 이 파일이 소유한다. 화면 파일에서 다시
+ * 정의하지 말 것.** 두 벌이 되면 컬럼 폭과 라벨이 조용히 갈라진다.
  */
 
 /**
@@ -42,6 +42,23 @@ export const BOOK_COLUMNS: DataTableColumn<BookListItem>[] = [
 export const BOOK_ITEM_COLUMNS: DataTableColumn<BookItemSummary>[] = [
   { key: "managementNumber", label: "관리번호", width: "60%", nowrap: true },
   { key: "status", label: "상태", width: "40%", nowrap: true },
+];
+
+/**
+ * 소장본 검색 목록 4컬럼(`CopyListCard`, `#25`). 행 타입은 `BookItemSearchRow`다
+ * (`BOOK_ITEM_COLUMNS`의 `BookItemSummary`와 다르다 — 이쪽에는 `bookTitle`이 있다).
+ *
+ * 마지막 컬럼 `bookItemId`는 화면에 id를 보여주는 컬럼이 아니라 **액션 자리 표시자**다.
+ * `renderCell`이 항상 덮어쓴다. `DataTableColumn<T>`의 `key: keyof T` 제약을 만족하려면
+ * 실존 키를 빌려야 한다(`ReturnListCard`의 `loanId` 컬럼과 같은 관례).
+ *
+ * 폭 합계 90%는 디자인 원본 그대로다 — 잔여는 `table-auto`가 분배한다.
+ */
+export const BOOK_ITEM_SEARCH_COLUMNS: DataTableColumn<BookItemSearchRow>[] = [
+  { key: "managementNumber", label: "관리번호", width: "18%", nowrap: true },
+  { key: "bookTitle", label: "도서명", width: "36%" },
+  { key: "status", label: "상태", width: "14%", nowrap: true },
+  { key: "bookItemId", label: "상태 변경", width: "22%", nowrap: true },
 ];
 
 /** 표에서 값이 없을 때의 표기 */
