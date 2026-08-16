@@ -189,27 +189,6 @@ export function CopyListCard({
 
   return (
     <div className={className}>
-      <Card padding="sm" className="mb-5">
-        <div className="flex gap-4">
-          <Input
-            label="관리번호"
-            className="flex-1"
-            placeholder="관리번호로 검색"
-            value={managementNumber}
-            onChange={(e) => setManagementNumber(e.target.value)}
-            autoComplete="off"
-          />
-          <Input
-            label="도서명"
-            className="flex-1"
-            placeholder="도서명으로 검색"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            autoComplete="off"
-          />
-        </div>
-      </Card>
-
       <Card
         title="소장본 목록"
         titleAs="h2"
@@ -220,6 +199,26 @@ export function CopyListCard({
           </Badge>
         }
       >
+        {/* 디자인 원본처럼 목록 카드 헤더 아래 구분선 안에 검색을 둔다 — 별도 Card로 빼지 않는다. */}
+        <div className="flex gap-4 border-b border-line px-5 py-3.5">
+          <Input
+            label="도서명"
+            className="flex-1"
+            placeholder="도서명으로 검색"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            autoComplete="off"
+          />
+          <Input
+            label="관리번호"
+            className="flex-1"
+            placeholder="관리번호로 검색"
+            value={managementNumber}
+            onChange={(e) => setManagementNumber(e.target.value)}
+            autoComplete="off"
+          />
+        </div>
+
         {error ? (
           <ListErrorState message={error} onRetry={() => setRetry((n) => n + 1)} />
         ) : (
