@@ -105,6 +105,9 @@
   --radius-button: 8px;
   --radius-input: 8px;
   --radius-card: 12px;
+  /* 선택형 타일/행 — CheckCard, 선택 파일 표시 행 (#27).
+     값이 같은 --radius-logo(사이드바 로고)를 재사용하지 않는다 — 의미가 달라 드리프트를 부른다. */
+  --radius-tile: 10px;
   --radius-badge: 9999px;
   --radius-logo: 10px;
   --radius-modal: 16px;
