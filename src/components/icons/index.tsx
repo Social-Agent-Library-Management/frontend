@@ -187,6 +187,41 @@ export function IconAlertCircle({ size = 20, ...props }: SizedIconProps) {
   );
 }
 
+/**
+ * 체크 — 원 없는 체크 (결과 배너 success 톤, `#27`).
+ *
+ * `IconCheckCircle`은 원이 있어 `IconBox`의 원형/라운드 배경 안에서 원이 겹친다.
+ */
+export function IconCheck({ size = 20, ...props }: SizedIconProps) {
+  return (
+    <IconBase size={size} viewBox="0 0 20 20" strokeWidth={2} {...props}>
+      <path d="M5 10.5l3.5 3.5L15 6.5" strokeLinejoin="round" />
+    </IconBase>
+  );
+}
+
+/** 업로드 — 엑셀 일괄 등록 nav & "처리 행" StatCard (`#27`) */
+export function IconUpload(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M10 13V3" />
+      <path d="M6 7l4-4 4 4" strokeLinejoin="round" />
+      <path d="M3 13v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3" />
+    </IconBase>
+  );
+}
+
+/** 다운로드 — 내보내기 nav (`#27`) */
+export function IconDownload(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M10 3v10" />
+      <path d="M6 9l4 4 4-4" strokeLinejoin="round" />
+      <path d="M3 13v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3" />
+    </IconBase>
+  );
+}
+
 /** 닫기 — X 두 선 (`Toast` 닫기 버튼) */
 export function IconClose({ size = 20, ...props }: SizedIconProps) {
   return (

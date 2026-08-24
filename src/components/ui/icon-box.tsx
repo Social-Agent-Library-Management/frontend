@@ -26,6 +26,7 @@ export const iconBoxVariants = cva(
       shape: {
         circle: "rounded-full",
         rounded: "rounded-dday", // 8px
+        card: "rounded-card", // 12px — 결과 배너 아이콘 원(#27). Card 반경과 맞춘다
       },
     },
     defaultVariants: {
