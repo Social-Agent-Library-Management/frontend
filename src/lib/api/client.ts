@@ -82,14 +82,17 @@ export type ApiRequestOptions = {
 };
 
 /** 취소는 호출부가 언마운트/경합으로 구분해야 하므로 ApiError로 감싸지 않는다. */
-function isAbortError(error: unknown): boolean {
+export function isAbortError(error: unknown): boolean {
   return (
     error instanceof DOMException &&
     (error.name === "AbortError" || error.name === "TimeoutError")
   );
 }
 
-function buildUrl(path: string, query?: Record<string, QueryValue>): string {
+export function buildUrl(
+  path: string,
+  query?: Record<string, QueryValue>,
+): string {
   const url = `${API_BASE_URL}${path}`;
   if (!query) return url;
 
@@ -127,6 +130,54 @@ function toProblemDetail(body: unknown): ProblemDetail | null {
 }
 
 /**
+ * fetch 자체가 실패했을 때(오프라인·CORS·DNS)의 표준 `ApiError`.
+ *
+ * `apiFetch`를 쓸 수 없는 도메인(multipart 요청·Blob 응답 — `lib/api/excel.ts`)도
+ * 이 함수를 재사용한다. 네트워크 실패 문구를 도메인마다 새로 쓰지 말 것.
+ */
+export function networkError(): ApiError {
+  return new ApiError({
+    status: 0,
+    code: NETWORK_ERROR_CODE,
+    detail: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+  });
+}
+
+/**
+ * 실패 응답(`!response.ok`)을 `ApiError`로 정규화한다. `ProblemDetail`이면 code/detail을
+ * 그대로 싣고, 아니면 `UNKNOWN_ERROR_CODE`로 떨어진다.
+ *
+ * ⚠️ response 바디를 소비한다 — 성공 경로나 바디를 살려야 하는 상태(예: 등록의 409)에는
+ *    호출하지 말 것.
+ * throw하지 않고 반환한다 — 호출부에서 `throw await toApiError(res)`로 throw 지점이 드러나게.
+ */
+export async function toApiError(response: Response): Promise<ApiError> {
+  let parsed: unknown = null;
+  try {
+    parsed = await response.json();
+  } catch {
+    parsed = null;
+  }
+
+  const problem = toProblemDetail(parsed);
+  if (problem) {
+    return new ApiError({
+      status: response.status,
+      code: problem.code,
+      detail: problem.detail,
+      traceId: problem.traceId,
+      problem,
+    });
+  }
+
+  return new ApiError({
+    status: response.status,
+    code: UNKNOWN_ERROR_CODE,
+    detail: `요청을 처리하지 못했습니다. (HTTP ${response.status})`,
+  });
+}
+
+/**
  * JSON API 호출. 실패는 항상 `ApiError`로 정규화되며,
  * 사용자 노출 문구는 `error.detail`이다. `AbortError`만 그대로 다시 던진다.
  */
@@ -151,38 +202,10 @@ export async function apiFetch<T>(
     });
   } catch (error) {
     if (isAbortError(error) || signal?.aborted) throw error;
-    throw new ApiError({
-      status: 0,
-      code: NETWORK_ERROR_CODE,
-      detail: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
-    });
+    throw networkError();
   }
 
-  if (!response.ok) {
-    let parsed: unknown = null;
-    try {
-      parsed = await response.json();
-    } catch {
-      parsed = null;
-    }
-
-    const problem = toProblemDetail(parsed);
-    if (problem) {
-      throw new ApiError({
-        status: response.status,
-        code: problem.code,
-        detail: problem.detail,
-        traceId: problem.traceId,
-        problem,
-      });
-    }
-
-    throw new ApiError({
-      status: response.status,
-      code: UNKNOWN_ERROR_CODE,
-      detail: `요청을 처리하지 못했습니다. (HTTP ${response.status})`,
-    });
-  }
+  if (!response.ok) throw await toApiError(response);
 
   if (response.status === 204) return undefined as T;
 
