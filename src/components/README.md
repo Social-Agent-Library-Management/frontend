@@ -28,7 +28,7 @@ src/components/
 
 | 컴포넌트 | 계층 | variant | 최초 도입 |
 |---------|------|---------|----------|
-| `IconBox` | `ui` | `size`(sm·md·lg) × `shape`(circle·rounded) | `#3` |
+| `IconBox` | `ui` | `size`(sm·md·lg) × `shape`(circle·rounded·card — `card`는 `#27`에서 추가) | `#3` |
 | `Badge` | `ui` | `variant`(soft·solid) × `tone`(neutral·primary·success·warning·danger·copy·muted) × `size`(sm·md·lg) | `#3` |
 | `Button` | `ui` | `variant`(primary·secondary·ghost·danger·success) × `size`(sm·md·lg) × `fullWidth` | `#3` |
 | `Input` | `ui` | `invalid`(error prop에서 파생) × `hasLeadingIcon`(leadingIcon prop에서 파생) — 껍데기는 `Field`에 위임 | `#3` |
@@ -41,6 +41,8 @@ src/components/
 | `PageHeader` | `ui` | 없음 (`title` / `description` / `actions` prop) | `#7` |
 | `Toast` | `ui` | `tone`(success·danger) | `#7` |
 | `ListErrorState` | `ui` | 없음 (`message` / `onRetry` / `retryLabel` prop) | `#17` |
+| `Toggle` | `ui` | `checked`(true·false) — 트랙/손잡이 cva 2개(`toggleTrackVariants`/`toggleThumbVariants`) | `#27` |
+| `CheckCard` | `ui` | `checked`(true·false) | `#27` |
 | `StatusBadge` | `library` | `status` 7종 → Badge `tone` 매핑, `size` 위임 | `#3` |
 | `StatCard` | `library` | `tone`(primary·success·warning·danger·copy·neutral) × `subTone`(muted·success·warning·danger·primary) | `#3` |
 | `DdayCard` | `library` | `urgency`(urgent·warning·normal — `daysLeft`에서 파생) | `#3` |
@@ -62,6 +64,14 @@ src/components/
 | `BookSearchSection` | `library` | 없음 | `#23` |
 | `CopyListCard` | `library` | 없음 | `#25` |
 | `CopyRegisterSection` | `library` | 없음 | `#25` |
+| `ImportResultBanner` | `library` | `tone`(success·danger) → 아이콘 박스 색 + 아이콘 컴포넌트 매핑 | `#27` |
+| `ExcelFileDropzone` | `library` | `dragging`(true·false — 내부 상태에서 파생) | `#27` |
+| `ExcelImportForm` | `library` | 없음 | `#27` |
+| `ExcelImportResult` | `library` | 없음 | `#27` |
+| `ExcelImportSection` | `library` | 없음 | `#27` |
+| `ExportSheetSelectCard` | `library` | 없음 | `#27` |
+| `ExportOptionsCard` | `library` | 없음 | `#27` |
+| `DataExportSection` | `library` | 없음 | `#27` |
 | `icons/*` | `icons` | 없음 (`IconProps` = SVG props, `currentColor`) | `#3` |
 
 > 계층: `ui`(프리미티브) 또는 도메인명(예: `dashboard`). variant는 cva로 정의된 축(예: `tone`, `size`). 최초 도입은 이슈/PR 번호(예: `#5`).
@@ -98,6 +108,15 @@ src/components/
 - `BookSelectField` / `LoanHistoryCard` / `BookSearchResultCard` / `CopyListCard` / `BookListCard` → `lib/use-debounced-value.ts`  (**디바운스를 컴포넌트에 인라인하지 말 것** — 지연 시간이 화면마다 갈라진다)
 - `DataTable` → `Pagination`  (**서버 페이지네이션이 필요하면 `serverPagination` prop을 쓸 것** — `Pagination`을 표 아래에 따로 붙이지 않는다)
 - `DataTable`의 `emptyText`는 `ReactNode`다(`#29`) — 빈 상태에 액션이 필요하면 **표 밖에 별도 블록을 만들지 말고 이 prop에 노드를 넘긴다**. 다만 정렬·기본 색·여백은 빈 셀 td가 이미 소유하므로 노드 쪽에서 `text-center`/`text-fg-muted`를 다시 붙이지 말 것. 조회 **실패**는 여전히 `ListErrorState`다 — 빈 결과와 에러를 이 prop으로 뭉치지 말 것
+- `ImportResultBanner` → `Card` + `IconBox`(shape="card") + `IconCheck`/`IconClose`  (**성공/오류 결과 배너를 화면에서 다시 마크업하지 말 것** — 구조가 같고 tone만 다르다. 결과 화면이 늘면 이 컴포넌트에 tone을 추가한다)
+- `ExcelFileDropzone` → `Button`  (파일 피커·drag&drop·파일 크기 표기를 화면에서 다시 만들지 말 것. **확장자·용량 사전 검증을 넣지 않는다** — 서버가 `INVALID_FILE_TYPE`/`FILE_TOO_LARGE`로 판정하고 결과는 Toast로 나온다)
+- `ExcelImportSection` → `ExcelImportForm` + `ExcelImportResult` + `Toast` + `lib/api/excel`(`importExcel`)  (**페이지에서 폼·결과를 직접 배치하지 말 것.** 단, 이건 `CopyRegisterSection`류의 "폼+목록 refreshToken" 패턴이 **아니다** — 목록이 없고 폼↔결과가 배타 전환된다. `refreshToken`을 배선하지 말 것. `phase` enum도 두지 않는다 — `file`/`uploading`/`result` 3개 상태에서 전부 파생된다)
+- `ExcelImportResult` → `ImportResultBanner` + `StatCard`×4 + `Card` + `DataTable` + `Button` + `buttonVariants`+`next/link` + `library/excel-table`  (201/409 유니온을 판별하는 지식이 여기 한 곳에만 있다. 성공/오류를 두 컴포넌트로 쪼개지 말 것 — 배너를 공유하고 리셋 계약이 같다. "도서 검색으로 이동"은 `<Link className={buttonVariants({...})}>`다 — `Button`은 `<button>`이라 링크가 안 되고, `LinkButton`을 새로 만들지 않는다. 결과 블록은 나중에 DOM에 삽입돼 live region으로 낭독되지 않으므로 마운트 시 배너 제목(`tabIndex={-1}`)으로 포커스를 옮긴다)
+- `DataExportSection` → `ExportSheetSelectCard` + `ExportOptionsCard` + `Toast` + `library/export-options` + `lib/api/excel`(`exportExcel`) + `lib/download`  (`<form>`은 이 섹션이 소유하고 카드 2개를 함께 감싼다 — `ExportOptionsCard` 안에 폼을 만들면 중첩 폼이 된다)
+- `ExportOptionsCard` → `Card` + `Input`(type="date")×2 + `Toggle`×2 + `Button`  (날짜 `Input`에 `aria-describedby`를 직접 넘기지 말 것 — `Input` 내부 `useFieldIds` 배선을 스프레드가 덮어써 `error` 연결이 끊긴다)
+- `ExportSheetSelectCard` → `Card` + `CheckCard`×3 + `library/export-options`(`EXPORT_SHEET_OPTIONS`)  (시트 컬럼 미리보기는 **백엔드 실제 컬럼**이다 — 디자인 목업 컬럼을 되살리지 말 것. 시트별 행 수는 카운트 API가 없어 표시하지 않는다)
+- `ExcelImportResult` → `library/excel-table.ts`(`IMPORT_WARNING_COLUMNS`, `IMPORT_ERROR_COLUMNS`)  (**엑셀 결과 표의 컬럼을 화면에서 다시 정의하지 말 것** — `book-table.ts`/`loan-table.ts`와 같은 이유. 배열이 둘인 것은 집합이 달라서다(경고 표엔 `errorField`가 없다). `code` 컬럼은 두 표 모두 없다 — 사용자 문구는 `message`다. 빈 셀 `—`는 `book-table.ts`의 `EMPTY_CELL`을 import한다)
+- `lib/api/excel.ts` → `lib/api/client.ts`(`buildUrl`/`isAbortError`/`networkError`/`toApiError`)  (**이 도메인만 `apiFetch`를 쓰지 않는다** — 등록은 multipart, 내보내기는 Blob이라 JSON 전용 계약에 맞지 않는다. 그래도 에러 정규화는 공용 헬퍼를 재사용해 다른 도메인과 같은 `ApiError`를 던진다. `excel.ts`에서 `ApiError`를 손으로 조립하지 말 것. 409는 **정상 반환**이므로 `toApiError`에 태우지 말 것 — 바디가 유실된다)
 - `BookListCard` / `LoanListCard` / `ReturnListCard` / `LoanHistoryCard` / `BookSearchResultCard` / `BookCopiesCard` / `CopyListCard` → `ui/ListErrorState`
   (**목록 조회 실패 UI를 카드마다 다시 마크업하지 말 것** — 문구·여백·재시도 버튼이 화면마다 갈라진다. 조회 실패는 전부 여기다 — `Toast`는 쓰기(mutation) 결과 전용이다. 재시도해도 결과가 같은 실패(404 등)는 `onRetry`를 생략해 버튼 없이 렌더한다)
 
@@ -109,8 +128,12 @@ src/components/
 
 백엔드 호출은 `src/lib/api/`(`client.ts` 공통 + 도메인별 파일)를 통해서만 한다. 컴포넌트에서 `fetch`를 직접 부르지 않는다. 에러는 `ApiError`로 정규화되며 사용자 노출 문구는 `error.detail`이다. 목록 응답의 `pagination` 봉투 타입(`PaginationMeta`)도 도메인 공통이라 `client.ts`가 소유한다 — 도메인 파일에 복제하지 않는다. 검색 파라미터 타입과 행 타입은 서버가 별개 enum이면 프론트도 별개로 둔다 — `lib/api/loans.ts`의 `LoanSearchStatus`(3값: 검색 필터, `OVERDUE` 포함)와 `LoanStatus`(2값: 행의 도메인 상태)를 섞지 않는다. 에러 코드 상수는 도메인 파일 **한 곳**이 소유한다 — `BOOK_ITEM_NOT_FOUND_CODE`는 `bookitems.ts`가 소유하고 `loans.ts`가 기존 임포트 경로 유지를 위해 재수출한다(`#25`). 두 벌로 늘리지 말 것.
 
+`apiFetch`를 쓸 수 없는 엔드포인트(multipart 요청·Blob 응답)는 `client.ts`가 export하는 `buildUrl`/`isAbortError`/`networkError`/`toApiError`로 **에러 정규화만 공유**한다(`lib/api/excel.ts`, `#27`). 새 fetch 함수를 만들 때 `ApiError`를 직접 `new` 하지 말 것 — 사용자 노출 문구(`detail`)와 네트워크 실패 문구가 도메인마다 갈라진다.
+
 파생 로직은 `src/lib/dday.ts`(`getUrgency` / `formatDday`)에 있다. `DdayCard`가 이 함수를 사용한다. 한국어 조사 선택은 `src/lib/korean-particle.ts`(`hasBatchim` / `withEul` / `withEuro`)에 있다. `BookSearchResultCard`가 사용한다. **조사 분기를 컴포넌트에 인라인하지 말 것** — 받침 판정 규칙이 화면마다 갈라진다.
 
 라우트 경로는 `src/components/library/nav-items.tsx`의 `LIBRARY_NAV_ITEMS[].href`와 `ADMIN_TAB_ITEMS[].href`가 함께 단일 진실 원천이다(`#31`). 새 화면을 추가하면 둘 중 맞는 배열에 항목을 넣고 `src/app/**`에 대응 라우트를 만든다 — 관리자 탭 데이터를 별도 파일로 분리하지 말 것(매칭 규칙 `resolveActiveNavId`와 href 값은 함께 바뀐다). `/admin` 자체는 화면이 아니라 허브라 `src/app/admin/page.tsx`가 `ADMIN_DEFAULT_TAB_HREF`(= `ADMIN_TAB_ITEMS[0].href`)로 리다이렉트한다 — 대상을 하드코딩하거나 `next.config.ts`의 `redirects()`로 옮기지 말 것.
 
-`PagePlaceholder`는 화면 구현 전 스캐폴딩이다. 현재 사용처는 `/admin/excel-import`·`/admin/data-export` 2곳이다. 모든 화면이 구현되어 사용처가 0이 되면 삭제한다.
+Blob 다운로드는 `src/lib/download.ts`의 `downloadBlob(blob, filename)`이 담당한다. 파일명은 **항상 서버의 `Content-Disposition`에서 온다**(`exportExcel()` 반환값) — 클라이언트에서 조합한 이름으로 저장하지 말 것. `export-options.ts`의 `estimateExportFileName()`은 화면에 보여주는 "예상 파일명" 표시용이며 다운로드에 쓰지 않는다. 이 값은 프리렌더된 HTML에 빌드 시점 날짜가 박히지 않도록 `DataExportSection`이 `useSyncExternalStore`(server snapshot = 빈 문자열)로 **클라이언트에서만** 계산한다 — 렌더 중에 직접 부르면 하이드레이션이 어긋난다.
+
+`PagePlaceholder`는 화면 구현 전 스캐폴딩이다. 현재 사용처는 `/`(대시보드) 1곳이다(`#27`에서 `/admin/excel-import`·`/admin/data-export`가 실제 구현으로 교체됐다). 모든 화면이 구현되어 사용처가 0이 되면 삭제한다.
