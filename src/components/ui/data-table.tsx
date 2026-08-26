@@ -27,8 +27,13 @@ export interface DataTableProps<T extends Record<string, unknown>> {
     value: T[keyof T],
     row: T,
   ) => React.ReactNode;
-  /** rows가 비었을 때 표시할 문구 */
-  emptyText?: string;
+  /**
+   * rows가 비었을 때 표시할 내용. 문자열이 기본이지만 노드도 받는다
+   * (`BookSearchResultCard`의 오타 교정 제안처럼 빈 상태에 액션이 붙는 경우, `#29`).
+   * 빈 셀 td는 이미 `text-center text-body text-fg-muted`다 — 노드를 넣을 때
+   * 정렬·기본 색을 다시 지정하지 말 것.
+   */
+  emptyText?: React.ReactNode;
   /** 행 클릭 핸들러 — 지정하면 행이 키보드로도 조작 가능해진다 */
   onRowClick?: (row: T, index: number) => void;
   /** 페이지당 행 수. 지정하면 클라이언트 페이지네이션 + 푸터가 렌더된다. */

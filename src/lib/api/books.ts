@@ -28,6 +28,16 @@ export type { PaginationMeta };
 export type BookSearchResult = {
   books: BookListItem[];
   pagination: PaginationMeta;
+  /**
+   * 검색 결과가 0건일 때 서버가 제안하는 오타 교정어. 없으면 null.
+   * (백엔드 `SearchBooksService.Response.suggestion` 1:1 매핑)
+   *
+   * 0건이 아닐 때 서버가 무엇을 주든 화면은 빈 상태에서만 이 값을 읽으므로 무해하다.
+   * 옵셔널로 두지 않는다 — 서버 DTO에 항상 있는 필드는 항상 있는 것으로 타이핑한다
+   * (`BookDetail` 선례). 배포 시차로 런타임에 `undefined`가 와도 소비 측이
+   * `?? null` + truthy 검사를 하므로 기존 동작으로 조용히 수렴한다.
+   */
+  suggestion: string | null;
 };
 
 /**
