@@ -37,8 +37,13 @@ export function BookSearchSection({
   // `search`는 디바운스 전 원본을 본다 — 입력 즉시 버튼이 살아나야 한다.
   const canReset = search !== "" || selected !== null;
 
-  function handleReset() {
-    setSearch("");
+  /**
+   * 검색어를 바꾼다. **검색어가 바뀌면 이전 선택은 즉시 무효**라는 규칙이
+   * 이 함수 한 곳에만 있다(원본 디자인 동작) — 호출부에서 `setSelected(null)`을
+   * 손으로 하지 말 것. 입력·초기화·오타 교정 재검색 세 경로가 전부 여기를 지난다.
+   */
+  function applySearch(term: string) {
+    setSearch(term);
     setSelected(null);
   }
 
@@ -51,11 +56,7 @@ export function BookSearchSection({
             placeholder="도서명, 저자, 출판사, ISBN 검색"
             leadingIcon={<IconSearch size={16} />}
             value={search}
-            onChange={(e) => {
-              // 검색어가 바뀌면 이전 선택은 즉시 무효다(원본 디자인 동작).
-              setSearch(e.target.value);
-              setSelected(null);
-            }}
+            onChange={(e) => applySearch(e.target.value)}
             className="sm:min-w-0 sm:flex-1"
           />
           <Button
@@ -63,7 +64,7 @@ export function BookSearchSection({
             size="sm"
             className="shrink-0"
             disabled={!canReset}
-            onClick={handleReset}
+            onClick={() => applySearch("")}
           >
             초기화
           </Button>
@@ -76,6 +77,7 @@ export function BookSearchSection({
           query={search}
           selectedId={selected?.id ?? null}
           onSelect={setSelected}
+          onSuggestionSearch={applySearch}
           pageSize={pageSize}
         />
         <BookCopiesCard book={selected} />
