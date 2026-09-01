@@ -129,6 +129,23 @@ export function IconSearch({ size = 20, ...props }: SizedIconProps) {
   );
 }
 
+/**
+ * 관리자 페이지 — 톱니 스포크.
+ *
+ * 원본(`components/navigation/Sidebar.jsx`)의 좌표를 그대로 옮겼다. 작은 중심원
+ * 하나(r=2.5)에서 직선 스포크 4개(상하좌우)와 대각선 스포크 4개가 뻗어 나가는
+ * 형태다 — 몸통이 있는 기어가 아니라 별/태양에 가까운 실루엣이다.
+ */
+export function IconAdmin(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <circle cx="10" cy="10" r="2.5" />
+      <path d="M10 2.5v2M10 15.5v2M17.5 10h-2M4.5 10h-2" />
+      <path d="M15.3 4.7l-1.4 1.4M6.1 13.9l-1.4 1.4M15.3 15.3l-1.4-1.4M6.1 6.1L4.7 4.7" />
+    </IconBase>
+  );
+}
+
 export function IconCalendar(props: IconProps) {
   return (
     <IconBase {...props}>

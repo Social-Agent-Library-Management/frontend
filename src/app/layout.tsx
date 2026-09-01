@@ -33,7 +33,7 @@ export default function RootLayout({
       {/* 사이드바는 고정, 콘텐츠 영역만 스크롤되는 앱 셸.
           컨테이너 <div> 없이 <body> 자체를 flex row로 쓴다. */}
       <body className="flex h-full overflow-hidden">
-        {/* 7개 메뉴를 건너뛰는 키보드 접근성. 항상 flow 밖(fixed)이라 flex 레이아웃에 영향 없다. */}
+        {/* 5개 메뉴를 건너뛰는 키보드 접근성. 항상 flow 밖(fixed)이라 flex 레이아웃에 영향 없다. */}
         <a
           href="#main-content"
           className="fixed top-4 left-4 z-50 -translate-y-20 rounded-button bg-surface px-4 py-2 text-body font-semibold text-primary transition-transform focus:translate-y-0 focus-ring"
