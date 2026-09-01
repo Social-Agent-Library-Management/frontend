@@ -46,6 +46,7 @@ src/components/
 | `DdayCard` | `library` | `urgency`(urgent·warning·normal — `daysLeft`에서 파생) | `#3` |
 | `Sidebar` | `library` | nav item `active`(true·false) | `#3` |
 | `AppSidebar` | `library` | 없음 (`Sidebar`에 위임) | `#5` |
+| `AdminTabs` | `library` | 탭 `active`(true·false) — 밑줄(`border-b-2`) 축. 사이드바 `navItemVariants`(배경 축)와 별개 | `#31` |
 | `BookRegisterForm` | `library` | 없음 | `#7` |
 | `BookListCard` | `library` | 없음 | `#7` |
 | `BookRegisterSection` | `library` | 없음 | `#7` |
@@ -70,8 +71,9 @@ src/components/
 - `StatusBadge` → `Badge`  (상태 배지를 직접 만들지 말 것)
 - `DdayCard` → `Badge`(solid) + `IconBox` + `IconCalendar` + `lib/dday`
 - `StatCard` → `IconBox`
-- `Sidebar` → `IconBox` + `icons` + `nav-items`
+- `Sidebar` → `IconBox` + `icons` + `nav-items`  (최상위 nav는 5개다. 도서 등록·소장본 등록·대출 내역 조회는 `#31`에서 최상위 nav에서 빠져 관리자 페이지 탭(`AdminTabs`)으로 옮겼다 — 화면 자체는 이동만 했고 컴포넌트는 그대로다. `/admin/**` 어디에 있어도 `"admin"` 항목 하나만 활성이다(접두 일치))
 - `AppSidebar` → `Sidebar` + `resolveActiveNavId`  (**레이아웃에서는 `Sidebar`를 직접 쓰지 말고 `AppSidebar`를 쓸 것** — activeId를 손으로 계산하지 않는다)
+- `AdminTabs` → `nav-items`(`ADMIN_TAB_ITEMS` + `resolveActiveNavId`) + `next/link`  (**관리자 탭 바를 `src/app/admin/layout.tsx` 안에 인라인으로 다시 그리지 말 것.** 경로→활성 판정은 사이드바와 **같은 `resolveActiveNavId`**를 쓴다 — 두 번째 매칭 구현 금지. `Sidebar`/`AppSidebar`처럼 프레젠테이션·어댑터로 쪼개지 않은 이유는 마운트 지점이 하나뿐이기 때문이다 — 두 번째 소비처가 생기면 그때 `activeId` prop을 뽑는다. `role="tablist"`/`role="tab"`을 붙이지 말 것 — ARIA 탭 위젯이 아니라 라우트 링크 목록이다)
 - `PagePlaceholder` → `PageHeader` + `Card`
 - `Toast` → `IconCheckCircle` / `IconAlertCircle` / `IconClose`
 - `BookRegisterSection` → `BookRegisterForm` + `BookListCard`  (**페이지에서 폼·목록을 직접 배치하지 말 것** — refreshToken 배선을 손으로 하지 않는다)
@@ -109,6 +111,6 @@ src/components/
 
 파생 로직은 `src/lib/dday.ts`(`getUrgency` / `formatDday`)에 있다. `DdayCard`가 이 함수를 사용한다. 한국어 조사 선택은 `src/lib/korean-particle.ts`(`hasBatchim` / `withEul` / `withEuro`)에 있다. `BookSearchResultCard`가 사용한다. **조사 분기를 컴포넌트에 인라인하지 말 것** — 받침 판정 규칙이 화면마다 갈라진다.
 
-라우트 경로는 `src/components/library/nav-items.tsx`의 `LIBRARY_NAV_ITEMS[].href`가 단일 진실 원천이다. 새 화면을 추가하면 여기에 항목을 넣고 `src/app/**`에 대응 라우트를 만든다.
+라우트 경로는 `src/components/library/nav-items.tsx`의 `LIBRARY_NAV_ITEMS[].href`와 `ADMIN_TAB_ITEMS[].href`가 함께 단일 진실 원천이다(`#31`). 새 화면을 추가하면 둘 중 맞는 배열에 항목을 넣고 `src/app/**`에 대응 라우트를 만든다 — 관리자 탭 데이터를 별도 파일로 분리하지 말 것(매칭 규칙 `resolveActiveNavId`와 href 값은 함께 바뀐다). `/admin` 자체는 화면이 아니라 허브라 `src/app/admin/page.tsx`가 `ADMIN_DEFAULT_TAB_HREF`(= `ADMIN_TAB_ITEMS[0].href`)로 리다이렉트한다 — 대상을 하드코딩하거나 `next.config.ts`의 `redirects()`로 옮기지 말 것.
 
-`PagePlaceholder`는 화면 구현 전 스캐폴딩이다. 모든 화면이 구현되어 사용처가 0이 되면 삭제한다.
+`PagePlaceholder`는 화면 구현 전 스캐폴딩이다. 현재 사용처는 `/admin/excel-import`·`/admin/data-export` 2곳이다. 모든 화면이 구현되어 사용처가 0이 되면 삭제한다.
