@@ -11,6 +11,9 @@ import type { ExportExcelRequest, ExportSheet } from "@/lib/api/excel";
  * ⚠️ 컬럼 문자열은 **백엔드가 실제로 쓰는 컬럼**이다(api-notes 기준). 디자인 목업의 컬럼
  * (도서의 "소장본 수", 소장본의 "도서명"/"최근 대출일" 등)을 되살리지 말 것.
  * 시트별 행 수도 표시하지 않는다 — 카운트 조회 API가 없다.
+ *
+ * `LOANS` 시트 미리보기에는 "대출자"를 넣지 않는다 — 개인정보 노출 범위를 줄이려고
+ * 미리보기 목록에서 뺐다.
  */
 export const EXPORT_SHEET_OPTIONS: readonly {
   id: ExportSheet;
@@ -35,7 +38,6 @@ export const EXPORT_SHEET_OPTIONS: readonly {
       "소장본ID",
       "관리번호",
       "도서명",
-      "대출자",
       "부서",
       "이메일",
       "대출일",

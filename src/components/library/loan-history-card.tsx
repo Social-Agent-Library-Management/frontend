@@ -70,7 +70,6 @@ export function LoanHistoryCard({
   className,
 }: LoanHistoryCardProps) {
   const [bookTitle, setBookTitle] = React.useState("");
-  const [borrowerName, setBorrowerName] = React.useState("");
   const [department, setDepartment] = React.useState("");
   const [status, setStatus] = React.useState<StatusFilter>("ALL");
   const [page, setPage] = React.useState(1);
@@ -89,17 +88,11 @@ export function LoanHistoryCard({
   // 훅은 필드마다 한 번씩 호출한다. 객체 하나를 디바운스하면 매 렌더 새 참조가 생겨
   // 이펙트가 매번 재실행된다.
   const qBookTitle = useDebouncedValue(bookTitle).trim();
-  const qBorrowerName = useDebouncedValue(borrowerName).trim();
   const qDepartment = useDebouncedValue(department).trim();
 
   // 구분자 문자열을 쓰면 사용자가 그 문자를 입력했을 때 서로 다른 필터 조합이 같은 키로
   // 뭉개진다 — JSON 배열로 직렬화한다.
-  const filterKey = JSON.stringify([
-    qBookTitle,
-    qBorrowerName,
-    qDepartment,
-    status,
-  ]);
+  const filterKey = JSON.stringify([qBookTitle, qDepartment, status]);
 
   // 필터가 바뀌면 1페이지로 되돌린다(렌더 중 조정 — 이펙트로 하면 캐스케이딩 렌더가 된다).
   const [prevFilterKey, setPrevFilterKey] = React.useState(filterKey);
@@ -118,7 +111,6 @@ export function LoanHistoryCard({
         status: status === "ALL" ? undefined : status,
         // 빈 문자열은 `buildUrl`이 자동으로 누락시킨다.
         bookTitle: qBookTitle,
-        borrowerName: qBorrowerName,
         department: qDepartment,
         page,
         pageSize,
@@ -138,15 +130,7 @@ export function LoanHistoryCard({
         }));
       });
     return () => controller.abort();
-  }, [
-    qBookTitle,
-    qBorrowerName,
-    qDepartment,
-    status,
-    page,
-    pageSize,
-    requestKey,
-  ]);
+  }, [qBookTitle, qDepartment, status, page, pageSize, requestKey]);
 
   const loading = settled.key !== requestKey;
   const error = loading ? null : settled.error;
@@ -154,16 +138,11 @@ export function LoanHistoryCard({
   const rows = result?.loans ?? [];
   const total = result?.pagination.totalElements ?? 0;
 
-  const hasFilter =
-    bookTitle !== "" ||
-    borrowerName !== "" ||
-    department !== "" ||
-    status !== "ALL";
+  const hasFilter = bookTitle !== "" || department !== "" || status !== "ALL";
 
   // 페이지는 `filterKey` 변경으로 자동 리셋되므로 여기서 setPage를 부르지 않는다.
   function handleReset() {
     setBookTitle("");
-    setBorrowerName("");
     setDepartment("");
     setStatus("ALL");
   }
@@ -182,13 +161,6 @@ export function LoanHistoryCard({
             placeholder="도서명"
             value={bookTitle}
             onChange={(e) => setBookTitle(e.target.value)}
-            className="sm:min-w-0 sm:flex-1"
-          />
-          <Input
-            aria-label="대출자"
-            placeholder="대출자 이름"
-            value={borrowerName}
-            onChange={(e) => setBorrowerName(e.target.value)}
             className="sm:min-w-0 sm:flex-1"
           />
           <Input
