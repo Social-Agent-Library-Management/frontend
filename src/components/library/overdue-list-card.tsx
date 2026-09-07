@@ -38,7 +38,9 @@ export function OverdueListCard({
       titleAs="h2"
       titleRight={
         <Badge variant="solid" tone="danger" size="md">
-          {totalCount}
+          {/* 바로 위 KPI 카드(`StatCard`)와 같은 수를 다른 표기로 보여주면 안 된다 —
+              실데이터에서 연체가 만 단위까지 올라간다(`98102` vs `98,102`). */}
+          {totalCount.toLocaleString()}
         </Badge>
       }
       className={className}
