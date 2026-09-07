@@ -51,7 +51,10 @@ function matchesSearch(row: LoanSummary, query: string): boolean {
   return (
     row.managementNumber.toLowerCase().includes(q) ||
     row.bookTitle.toLowerCase().includes(q) ||
-    row.borrowerName.toLowerCase().includes(q)
+    // 이 목록은 `status=ON_LOAN`으로 좁혀져 있어 실제로는 항상 이름이 있지만,
+    // `borrowerName`은 타입상 nullable이다(반납 시 파기 — `lib/api/loans.ts` 참조).
+    // 필터가 조용히 깨지지 않도록 빈 문자열로 떨어뜨린다(= 검색어와 매치되지 않음).
+    (row.borrowerName ?? "").toLowerCase().includes(q)
   );
 }
 

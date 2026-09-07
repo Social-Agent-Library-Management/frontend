@@ -38,7 +38,15 @@ export type LoanSummary = {
   loanId: number;
   managementNumber: string;
   bookTitle: string;
-  borrowerName: string;
+  /**
+   * 대출자 이름. **반납 완료 건은 개인정보 파기로 서버가 `null`을 내려준다**
+   * (`SearchLoansService.LoanSummary.borrowerName: String?`).
+   *
+   * `status=ON_LOAN`으로 좁힌 목록(`LoanListCard`·`ReturnListCard`)에서는 구조적으로
+   * 항상 값이 있지만, 상태 필터 없는 목록(대출 내역·대시보드 최근 활동)에는 실제로
+   * null이 섞인다 — 표에서 그냥 렌더하면 빈 셀이 되므로 `ui/EmptyCell`을 쓴다.
+   */
+  borrowerName: string | null;
   department: string;
   /** LocalDate "YYYY-MM-DD" */
   loanDate: string;
@@ -54,6 +62,33 @@ export type LoanSummary = {
 export type LoanSearchResult = {
   loans: LoanSummary[];
   pagination: PaginationMeta;
+};
+
+/**
+ * `GET /loans/overdue`(및 대시보드 요약의 `overdueLoans`)의 행 타입.
+ *
+ * `LoanSummary`에서 파생시키지 않는다 — 서버도 별개 클래스다
+ * (`OverdueLoansService.OverdueLoanSummary`). 집합이 "대출 중 && 기한 경과"로
+ * 좁혀져 있어 구조가 다르다:
+ * - `borrowerName`이 **non-null**이다 (반납 건이 섞일 수 없으므로 파기된 이름이 없다)
+ * - `returnedAt` / `status` / `overdue`가 **없다** (전부 상수라 서버가 내리지 않는다)
+ * - `overdueDays`가 **있다** (서버가 조회 시점 날짜로 계산 — 프론트에서 재계산 금지)
+ *
+ * `LoanSummary`와 마찬가지로 `interface`가 아니라 `type` 별칭이어야 한다
+ * (`DataTable`의 암묵적 인덱스 시그니처 제약).
+ */
+export type OverdueLoanSummary = {
+  loanId: number;
+  managementNumber: string;
+  bookTitle: string;
+  borrowerName: string;
+  department: string;
+  /** LocalDate "YYYY-MM-DD" */
+  loanDate: string;
+  /** LocalDate "YYYY-MM-DD" */
+  dueDate: string;
+  /** 연체 경과일(양수). D-day 라벨로 쓸 때는 부호를 뒤집는다 — `daysLeft = -overdueDays` */
+  overdueDays: number;
 };
 
 export type CreateLoanInput = {
