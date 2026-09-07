@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
+import { EmptyCell } from "@/components/ui/empty-cell";
 import { Input, inputVariants } from "@/components/ui/input";
 import { ListErrorState } from "@/components/ui/list-error-state";
 import { StatusBadge } from "@/components/library/status-badge";
@@ -258,17 +259,14 @@ export function LoanHistoryCard({
               if (col.key === "status") {
                 return <StatusBadge status={toLoanBadgeStatus(row)} />;
               }
-              if (col.key === "returnedAt") {
-                // 미반납(대출중·연체)은 값이 없다. DataTable의 기본 렌더는 null을 빈 셀로
-                // 만들어 컬럼이 비어 보이므로, placeholder 톤 em dash로 "없음"을 명시한다.
-                // 배지·아이콘을 쓰지 않는다 — pill은 상태 어휘 전용이다.
-                if (row.returnedAt) return row.returnedAt;
-                return (
-                  <span className="text-fg-subtle">
-                    <span aria-hidden="true">—</span>
-                    <span className="sr-only">미반납</span>
-                  </span>
-                );
+              if (col.key === "returnedAt" && !row.returnedAt) {
+                // 미반납(대출중·연체)은 값이 없다.
+                return <EmptyCell label="미반납" />;
+              }
+              if (col.key === "borrowerName" && row.borrowerName === null) {
+                // 이 표는 반납 완료 건을 포함한다. 서버가 반납 시점에 대출자 이름을
+                // 파기하므로(개인정보) null이 내려온다 — `RecentLoansCard`와 같은 처리다.
+                return <EmptyCell label="반납 완료 — 대출자 정보 파기됨" />;
               }
               return value as React.ReactNode;
             }}
