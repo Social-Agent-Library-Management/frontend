@@ -41,6 +41,7 @@ src/components/
 | `PageHeader` | `ui` | 없음 (`title` / `description` / `actions` prop) | `#7` |
 | `Toast` | `ui` | `tone`(success·danger) | `#7` |
 | `ListErrorState` | `ui` | 없음 (`message` / `onRetry` / `retryLabel` prop) | `#17` |
+| `EmptyCell` | `ui` | 없음 (`label` = sr-only 사유) | `#37` |
 | `StatusBadge` | `library` | `status` 7종 → Badge `tone` 매핑, `size` 위임 | `#3` |
 | `StatCard` | `library` | `tone`(primary·success·warning·danger·copy·neutral) × `subTone`(muted·success·warning·danger·primary) | `#3` |
 | `DdayCard` | `library` | `urgency`(urgent·warning·normal — `daysLeft`에서 파생) | `#3` |
@@ -62,6 +63,9 @@ src/components/
 | `BookSearchSection` | `library` | 없음 | `#23` |
 | `CopyListCard` | `library` | 없음 | `#25` |
 | `CopyRegisterSection` | `library` | 없음 | `#25` |
+| `RecentLoansCard` | `library` | 없음 | `#37` |
+| `OverdueListCard` | `library` | 없음 | `#37` |
+| `DashboardSection` | `library` | 없음 | `#37` |
 | `icons/*` | `icons` | 없음 (`IconProps` = SVG props, `currentColor`) | `#3` |
 
 > 계층: `ui`(프리미티브) 또는 도메인명(예: `dashboard`). variant는 cva로 정의된 축(예: `tone`, `size`). 최초 도입은 이슈/PR 번호(예: `#5`).
@@ -90,7 +94,11 @@ src/components/
 - `LoanListCard` → `Card` + `DataTable` + `StatusBadge` + `lib/api/loans`  (연체 배지는 서버가 내려준 `overdue`를 그대로 쓴다 — 프론트에서 날짜를 재계산하지 않는다)
 - `ReturnListCard` → `Card` + `Input` + `DataTable` + `StatusBadge` + `Button` + `Toast` + `lib/api/loans`(`returnLoan`)  (반납 처리 후 낙관적으로 행을 바꾸지 않고 재조회한다 — `LoanListCard`와 동일 원칙. 관리번호 검색은 백엔드 `/loans`가 지원하지 않아 ON_LOAN 전체를 받아 클라이언트에서 필터링한다)
 - `LoanHistoryCard` → `Card` + `Input` + `Button` + `Badge` + `DataTable` + `StatusBadge` + `lib/api/loans` + `lib/use-debounced-value`  (상태 필터는 네이티브 `<select>` + `Input`의 `inputVariants`다 — **`ui/select.tsx`를 새로 만들지 말 것**. 코드베이스 유일한 select라 1회용으로 두었고, 두 번째 사용처가 생기면 그때 프리미티브로 승격한다. 옵션 4종(전체/대출중/연체/반납완료)은 **전부 서버 필터**(`status` 파라미터)다 — 연체를 클라이언트에서 다시 걸러내지 않는다. 반납일 빈 값 `—` 표기도 이 카드의 `renderCell` 1회용이다)
-- `LoanListCard` / `LoanHistoryCard` → `library/loan-table.ts`(`LOAN_COLUMNS`, `LOAN_HISTORY_COLUMNS`, `toLoanBadgeStatus`)  (**대출 표의 컬럼·상태 매핑을 화면에서 다시 정의하지 말 것** — 컬럼 폭과 배지 라벨이 화면마다 갈라진다. 행 타입이 `LoanSummary`인 컬럼셋은 전부 이 파일이 소유한다. 컬럼셋이 둘인 이유는 화면별 취향이 아니라 **집합이 다르기 때문**이다 — 대출 현황(`LOAN_COLUMNS`, 7컬럼)은 `status=ON_LOAN` 고정이라 `returnedAt`이 구조적으로 항상 null이라 반납일 컬럼이 없고, 대출 내역(`LOAN_HISTORY_COLUMNS`, 8컬럼, `#21`)은 반납 완료 건이 섞여 반납일이 있다(디자인도 두 화면을 다르게 그린다). 두 배열의 `label`/`secondary`/`nowrap`은 같은 키에 대해 항상 일치해야 하고 다른 것은 폭뿐이다 — 한쪽만 고치지 말 것. `ReturnListCard`(액션 컬럼)는 배지 매핑만 공유하고 컬럼은 화면 파일에 둔다)
+- `LoanListCard` / `LoanHistoryCard` / `RecentLoansCard` → `library/loan-table.ts`(`LOAN_COLUMN_DEFS`, `LOAN_COLUMNS`, `LOAN_HISTORY_COLUMNS`, `DASHBOARD_LOAN_COLUMNS`, `toLoanBadgeStatus`)  (**대출 표의 컬럼·상태 매핑을 화면에서 다시 정의하지 말 것** — 컬럼 폭과 배지 라벨이 화면마다 갈라진다. 행 타입이 `LoanSummary`인 컬럼셋은 전부 이 파일이 소유한다. 컬럼셋이 셋인 이유는 화면별 취향이 아니라 **집합이 다르기 때문**이다 — 대출 현황(`LOAN_COLUMNS`, 7컬럼)은 `status=ON_LOAN` 고정이라 `returnedAt`이 구조적으로 항상 null이라 반납일 컬럼이 없고, 대출 내역(`LOAN_HISTORY_COLUMNS`, 8컬럼, `#21`)은 반납 완료 건이 섞여 반납일이 있으며, 대시보드 최근 활동(`DASHBOARD_LOAN_COLUMNS`, 5컬럼, `#37`)은 2단 패널의 좁은 폭 때문에 관리번호·반납예정일·반납일을 뺐다. **`#37`에서 셋째 컬럼셋이 생기면서 파일이 예고했던 대로 "공통 정의(`LOAN_COLUMN_DEFS`) + 폭 주입(`loanColumns()`)"으로 리팩터했다** — 이제 `label`/`secondary`/`nowrap`은 한 곳에만 있어 표마다 갈라지는 것이 구조적으로 불가능하다. 배열마다 다른 것은 폭과 멤버십뿐이니, 넷째 컬럼셋이 필요하면 **배열을 복제하지 말고 `loanColumns({...})`를 한 줄 더 부른다**. `ReturnListCard`(액션 컬럼)는 배지 매핑만 공유하고 컬럼은 화면 파일에 둔다)
+- `RecentLoansCard` / `OverdueListCard` → `library/dashboard-section.tsx`  (**페이지에서 두 카드를 직접 배치하지 말 것** — 두 카드는 `/dashboard/summary` **호출 하나**를 나눠 쓴다. 카드가 각자 조회하면 같은 응답을 두 번 받고 집계 기준일도 갈라진다. 그래서 이 둘은 다른 목록 카드(`LoanListCard` 등)와 달리 **조회를 소유하지 않고 `rows`를 주입받는다**. 로딩·에러도 카드가 아니라 섹션 단위다 — 출처가 요청 하나라 실패도 하나이고, 카드마다 `ListErrorState`를 두면 같은 문구가 두 번 뜬다)
+- `RecentLoansCard`는 `LoanListCard`와 합치지 않는다 — 저쪽은 `status=ON_LOAN` 고정 + 서버 페이지네이션 + 조회 자체 소유이고, 이쪽은 상태 무필터 + 페이지네이션 없음 + 데이터 주입이다. 계약이 정반대라 prop으로 이으면 축이 셋 는다(`LoanHistoryCard`가 `LoanListCard`와의 통합을 거부한 것과 같은 상황)
+- `OverdueListCard` → `Card` + `Badge`(solid/danger) + `DdayCard`  (`DdayCard` 주석이 "리스트 래핑은 소비 화면 책임"이라 명시한 그 소비처다 — `<ul>/<li>`와 `meta` 문자열 조합을 여기가 소유한다. 헤더 배지는 `rows.length`가 아니라 **`totalCount`(연체 전체 건수)**다 — 목록은 `OVERDUE_LIMIT`으로 잘려 있어 길이를 쓰면 배지가 거짓말한다. 서버 `overdueDays`는 경과일(양수)이고 `DdayCard`는 남은 일수를 받으므로 **부호를 뒤집어 넘긴다**)
+- `DashboardSection` → `StatCard`×4 + `RecentLoansCard` + `OverdueListCard` + `ListErrorState` + `lib/api/dashboard`  (KPI 그리드는 **의도적으로 인라인**이다 — 사용처가 1곳뿐이라 `DashboardStatsGrid`를 뽑으면 "2회 반복이면 추출" 위반이다. 두 패널을 `lg:grid-cols-3` + `lg:col-span-2`로 놓아 디자인의 2:1을 임의값 없이 만들고, **grid의 기본 stretch가 좌우 카드 높이를 자동으로 맞춘다** — 연체 노출 개수 `OVERDUE_LIMIT`은 좌측 10행 표 높이(≈610px)에 맞춰 계산한 값이지만 폰트 렌더 오차는 이 stretch가 흡수한다)
 - `BookSearchSection` → `BookSearchResultCard` + `BookCopiesCard` + `Card` + `Input`(`leadingIcon`) + `IconSearch` + `Button`  (**페이지에서 검색바·두 카드를 직접 배치하지 말 것** — `search`/`selected` 배선을 손으로 하지 않는다. 검색어가 바뀌면 선택이 무효가 되는 규칙이 여기 한 곳에만 있다. 검색어 갱신은 전부 `applySearch(term)`를 지난다 — **`setSearch`와 `setSelected(null)`을 호출부에서 짝지어 쓰지 말 것**(입력·초기화·오타 교정 재검색 3경로가 공유한다). 좌우 카드를 하나로 합치지 않는 이유는 각자 독립된 비동기 작업을 갖기 때문이다 — `LoanHistoryCard`가 `LoanListCard`와의 통합을 거부한 것과 같은 상황)
 - `BookSearchResultCard` → `Card` + `Badge` + `DataTable` + `ListErrorState` + `lib/api/books`(`searchBooks`) + `lib/use-debounced-value` + `lib/korean-particle`  (선택 상태는 소유하지 않는다 — `selectedId`를 받아 강조만 한다. 페이지를 넘겨도 선택은 유지된다. `BookListCard`와 겸용하지 않는다 — 저쪽은 행 클릭·선택이 없고 검색어를 자기가 소유하며 리셋 트리거를 부모가 `refreshToken`으로 소유해 계약이 충돌한다. 빈 상태의 오타 교정 제안(`#29`)은 응답에 `suggestion`이 있을 때만 렌더하고 **재검색은 `onSuggestionSearch`로 부모에 위임한다** — `selectedId`와 같은 이유로 검색어를 소유하지 않는다. 트리거를 `rows.length === 0 && !loading`으로 중복 판정하지 말 것 — `DataTable`이 이미 그때만 `emptyText`를 그린다)
 - `BookCopiesCard` → `Card` + `Badge`(tone="copy") + `DataTable` + `StatusBadge` + `ListErrorState` + `lib/api/books`(`getBook`)  (제목·저자·출판사·ISBN은 좌측에서 넘어온 `BookListItem`에서 그린다 — `getBook()`은 `bookItems` 하나만을 위한 호출이라 스피너·스켈레톤이 필요 없다. 404는 재시도 버튼 없이 `ListErrorState`만 띄운다. 상세를 캐시하지 않는다 — 소장본 상태는 다른 사용자의 대출·반납으로 수시로 바뀐다)
@@ -98,7 +106,8 @@ src/components/
 - `BookSelectField` / `LoanHistoryCard` / `BookSearchResultCard` / `CopyListCard` / `BookListCard` → `lib/use-debounced-value.ts`  (**디바운스를 컴포넌트에 인라인하지 말 것** — 지연 시간이 화면마다 갈라진다)
 - `DataTable` → `Pagination`  (**서버 페이지네이션이 필요하면 `serverPagination` prop을 쓸 것** — `Pagination`을 표 아래에 따로 붙이지 않는다)
 - `DataTable`의 `emptyText`는 `ReactNode`다(`#29`) — 빈 상태에 액션이 필요하면 **표 밖에 별도 블록을 만들지 말고 이 prop에 노드를 넘긴다**. 다만 정렬·기본 색·여백은 빈 셀 td가 이미 소유하므로 노드 쪽에서 `text-center`/`text-fg-muted`를 다시 붙이지 말 것. 조회 **실패**는 여전히 `ListErrorState`다 — 빈 결과와 에러를 이 prop으로 뭉치지 말 것
-- `BookListCard` / `LoanListCard` / `ReturnListCard` / `LoanHistoryCard` / `BookSearchResultCard` / `BookCopiesCard` / `CopyListCard` → `ui/ListErrorState`
+- `LoanHistoryCard` / `RecentLoansCard` → `ui/EmptyCell`  (**표 셀의 "값 없음" 표기를 화면마다 다시 마크업하지 말 것** — 기호·색·sr-only 유무가 표마다 갈라진다. 사유는 `label`로 넘긴다: 미반납(`returnedAt`), 반납 완료로 파기됨(`borrowerName`). `book-table.ts`의 `EMPTY_CELL = "—"`와 합치지 않는다 — 저건 포맷 함수가 돌려주는 **문자열**이고 이건 노드다)
+- `BookListCard` / `LoanListCard` / `ReturnListCard` / `LoanHistoryCard` / `BookSearchResultCard` / `BookCopiesCard` / `CopyListCard` / `DashboardSection` → `ui/ListErrorState`
   (**목록 조회 실패 UI를 카드마다 다시 마크업하지 말 것** — 문구·여백·재시도 버튼이 화면마다 갈라진다. 조회 실패는 전부 여기다 — `Toast`는 쓰기(mutation) 결과 전용이다. 재시도해도 결과가 같은 실패(404 등)는 `onRetry`를 생략해 버튼 없이 렌더한다)
 
 `Input`의 `leadingIcon`은 **장식 전용**이다(`aria-hidden` + `pointer-events-none`). 클릭 가능한 아이콘(지우기 버튼 등)이 필요해지면 이 prop에 버튼을 넣지 말고 그때 별도 축을 설계한다. `inputVariants`의 base는 좌측 패딩을 갖지 않는다 — `hasLeadingIcon` 축이 소유한다(cva가 클래스를 단순 연결하므로 `px-*`와 `pl-*`을 함께 두면 승패가 CSS 소스 순서에 걸린다).
@@ -107,7 +116,11 @@ src/components/
 
 페이지 좌우/상하 여백은 `src/app/layout.tsx`의 `<main>`이 소유한다. 페이지·컴포넌트에서 `px-page-x py-page-y`를 다시 쓰지 않는다.
 
-백엔드 호출은 `src/lib/api/`(`client.ts` 공통 + 도메인별 파일)를 통해서만 한다. 컴포넌트에서 `fetch`를 직접 부르지 않는다. 에러는 `ApiError`로 정규화되며 사용자 노출 문구는 `error.detail`이다. 목록 응답의 `pagination` 봉투 타입(`PaginationMeta`)도 도메인 공통이라 `client.ts`가 소유한다 — 도메인 파일에 복제하지 않는다. 검색 파라미터 타입과 행 타입은 서버가 별개 enum이면 프론트도 별개로 둔다 — `lib/api/loans.ts`의 `LoanSearchStatus`(3값: 검색 필터, `OVERDUE` 포함)와 `LoanStatus`(2값: 행의 도메인 상태)를 섞지 않는다. 에러 코드 상수는 도메인 파일 **한 곳**이 소유한다 — `BOOK_ITEM_NOT_FOUND_CODE`는 `bookitems.ts`가 소유하고 `loans.ts`가 기존 임포트 경로 유지를 위해 재수출한다(`#25`). 두 벌로 늘리지 말 것.
+백엔드 호출은 `src/lib/api/`(`client.ts` 공통 + 도메인별 파일)를 통해서만 한다. 컴포넌트에서 `fetch`를 직접 부르지 않는다. 에러는 `ApiError`로 정규화되며 사용자 노출 문구는 `error.detail`이다. 목록 응답의 `pagination` 봉투 타입(`PaginationMeta`)도 도메인 공통이라 `client.ts`가 소유한다 — 도메인 파일에 복제하지 않는다. 검색 파라미터 타입과 행 타입은 서버가 별개 enum이면 프론트도 별개로 둔다 — `lib/api/loans.ts`의 `LoanSearchStatus`(3값: 검색 필터, `OVERDUE` 포함)와 `LoanStatus`(2값: 행의 도메인 상태)를 섞지 않는다. 에러 코드 상수는 도메인 파일 **한 곳**이 소유한다 — `BOOK_ITEM_NOT_FOUND_CODE`는 `bookitems.ts`가 소유하고 `loans.ts`가 기존 임포트 경로 유지를 위해 재수출한다(`#25`). 두 벌로 늘리지 말 것. 같은 규칙으로 `OverdueLoanSummary`(연체 행 타입)는 **대출 도메인**인 `loans.ts`가 소유하고 `dashboard.ts`가 임포트한다 — 화면이 쓰는 곳으로 타입을 옮기지 말 것(`#37`).
+
+`lib/api/dashboard.ts`는 백엔드의 **화면 전용 집계 엔드포인트**(`GET /dashboard/summary`)를 감싼다. 대시보드를 그리려고 `/books`·`/bookitems`·`/loans`를 각각 긁지 말 것 — 호출이 4~5개로 늘고 집계 기준일이 호출마다 갈라진다(서버는 `LocalDate.now()` 한 번으로 전부 계산한다). 표시 건수(`RECENT_LOAN_LIMIT`/`OVERDUE_LIMIT`)는 **모듈 상수로 고정한다** — 서버가 limit 조합을 캐시 키로 쓰므로 화면에서 흔들면 캐시가 조합마다 갈라진다.
+
+`LoanSummary.borrowerName`은 **nullable이다**(`#37`에서 서버 스키마에 맞춰 교정). 반납 완료 건은 개인정보 파기로 서버가 null을 내려준다 — `status=ON_LOAN`으로 좁힌 목록에서는 항상 값이 있지만, 상태 필터가 없는 목록(대출 내역·대시보드 최근 활동)에는 실제로 섞인다. 표에서 그냥 렌더하면 빈 셀이 되므로 `ui/EmptyCell`을 쓴다.
 
 파생 로직은 `src/lib/dday.ts`(`getUrgency` / `formatDday`)에 있다. `DdayCard`가 이 함수를 사용한다. 한국어 조사 선택은 `src/lib/korean-particle.ts`(`hasBatchim` / `withEul` / `withEuro`)에 있다. `BookSearchResultCard`가 사용한다. **조사 분기를 컴포넌트에 인라인하지 말 것** — 받침 판정 규칙이 화면마다 갈라진다.
 
