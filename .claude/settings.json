@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/harness_log.py", "args": ["log"], "async": true } ] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/harness_log.py", "args": ["log"], "async": true } ] }
+    ],
+    "SubagentStart": [
+      { "matcher": "*", "hooks": [ { "type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/harness_log.py", "args": ["log"], "async": true } ] }
+    ],
+    "SubagentStop": [
+      { "matcher": "*", "hooks": [ { "type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/harness_log.py", "args": ["log"], "async": true } ] }
+    ],
+    "PostToolUse": [
+      { "matcher": "Bash|Edit|Write|NotebookEdit", "hooks": [ { "type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/harness_log.py", "args": ["log"], "async": true } ] }
+    ],
+    "PostToolUseFailure": [
+      { "matcher": "*", "hooks": [ { "type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/harness_log.py", "args": ["log"], "async": true } ] }
+    ],
+    "PostModelSwitch": [
+      { "hooks": [ { "type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/harness_log.py", "args": ["log"], "async": true } ] }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit *)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/harness_log.py",
+            "args": ["gate-commit"],
+            "statusMessage": "커밋 트레일러 검증 중",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Bash(gh pr create *)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/harness_log.py",
+            "args": ["gate-pr"],
+            "statusMessage": "파이프라인 충실도 확인 중",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      { "hooks": [ { "type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/harness_log.py", "args": ["log"], "timeout": 2 } ] }
+    ]
+  }
+}
