@@ -76,7 +76,11 @@ Generated with design-to-frontend harness (Claude Opus 4.8)
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
-- 모델명은 실제 사용 모델로 갱신한다(예: `Claude Opus 4.8`).
+- **모델명은 손으로 적지 않는다.** `PreToolUse` 훅(`.claude/hooks/harness_log.py gate-commit`)이
+  세션 트랜스크립트에서 실제 모델을 읽어 커밋 직전에 자동으로 교정한다. 위 예시의 모델명은
+  자리표시자이므로 그대로 두고 커밋해도 된다.
+  (훅 도입 전에는 이 줄이 리더의 기억에 의존했고, 그 결과 20개 PR 중 18개의 트레일러가
+  실제 사용 모델과 달랐다 — `.harness/baseline.md` 참조.)
 - 트레일러는 본문에만 들어가므로 `git log --oneline`에는 제목만 보인다.
 - 커밋 예시:
 

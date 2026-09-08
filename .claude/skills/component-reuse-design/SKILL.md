@@ -28,6 +28,8 @@ src/
 **설계 전에 반드시 실행한다.** 이미 있는 Button을 또 만드는 것이 가장 흔한 중복이다.
 
 - **먼저 `src/components/README.md`의 "컴포넌트 인벤토리" 표를 Read**한다. 이미 있는 재사용 컴포넌트를 한눈에 파악하는 가장 빠른 길이다.
+- 이어서 같은 파일의 **`### 합성 관계`**를 읽는다. 여기 적힌 "…하지 말 것"이 과거에 실제로 발생한 중복을 막는다.
+- API·유틸 레이어를 건드릴 설계라면 `src/lib/README.md`도 함께 읽는다.
 - `src/components/ui/`와 `src/components/`의 모든 컴포넌트를 Glob으로 나열하고 Read
 - 각 컴포넌트의 props/variant를 파악해 "재사용 가능 목록"을 만든다
 - `src/app/globals.css`의 `@theme` 블록을 읽어 이미 정의된 토큰을 파악한다
