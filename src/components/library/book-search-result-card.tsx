@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import { ListErrorState } from "@/components/ui/list-error-state";
-import { BOOK_SEARCH_COLUMNS } from "@/components/library/book-table";
+import { BOOK_COLUMNS } from "@/components/library/book-table";
 import { isApiError } from "@/lib/api/client";
 import {
   searchBooks,
@@ -41,8 +41,7 @@ export interface BookSearchResultCardProps {
  *
  * `BookListCard`(`#7`)와 겸용하지 않는다 — 저쪽은 검색어도 행 클릭도 선택도 없고
  * 리셋 트리거를 부모가 `refreshToken`으로 소유한다. prop 3개를 얹으면 두 계약이 충돌한다.
- * 컬럼 정의는 `library/book-table.ts`가 소유하되, 이 화면은 ISBN을 뺀
- * `BOOK_SEARCH_COLUMNS`를 쓴다(검색 결과에 ISBN을 노출하지 않는다).
+ * 컬럼 정의는 `library/book-table.ts`의 `BOOK_COLUMNS`를 공유한다(ISBN 미노출).
  *
  * 선택 상태는 소유하지 않는다 — `selectedId`를 받아 강조만 한다.
  * 페이지를 넘겨도 선택은 유지된다(우측 패널은 행 위치가 아니라 도서 id로 조회한다).
@@ -124,7 +123,7 @@ export function BookSearchResultCard({
       ) : (
         <DataTable<BookListItem>
           caption="도서 검색 결과"
-          columns={BOOK_SEARCH_COLUMNS}
+          columns={BOOK_COLUMNS}
           rows={rows}
           loading={loading}
           emptyText={

@@ -142,7 +142,7 @@ export type ReturnLoanResult = {
   overdueDays: number | null;
 };
 
-/** 백엔드 LoanError 코드 (`books.ts`의 DUPLICATE_ISBN_CODE 네이밍 관례를 따른다) */
+/** 백엔드 LoanError 코드 (`_CODE` 접미사 네이밍 관례를 따른다) */
 /** 소장본 도메인 코드라 `bookitems.ts`가 소유한다. 기존 임포트 경로 유지를 위해 재수출만 한다. */
 export { BOOK_ITEM_NOT_FOUND_CODE } from "@/lib/api/bookitems";
 export const BOOK_ITEM_NOT_AVAILABLE_CODE = "BOOK_ITEM_NOT_AVAILABLE";

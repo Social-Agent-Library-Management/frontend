@@ -24,7 +24,7 @@ export type CreateBookItemInput = {
   managementNumber: string;
 };
 
-/** 백엔드 BookItemError 코드 (books.ts의 DUPLICATE_ISBN_CODE 네이밍 관례를 따른다) */
+/** 백엔드 BookItemError 코드 (`_CODE` 접미사 네이밍 관례를 따른다) */
 export const BOOK_NOT_FOUND_CODE = "BOOK_NOT_FOUND";
 export const INVALID_MANAGEMENT_NUMBER_FORMAT_CODE =
   "INVALID_MANAGEMENT_NUMBER_FORMAT";
