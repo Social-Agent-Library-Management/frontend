@@ -45,3 +45,12 @@ next-env.d.ts
 # design-to-frontend harness scratch (pipeline artifacts, not shipped code)
 /_workspace/
 /_workspace_*/
+
+# 하네스 실행 원시 로그 (요약은 .harness/runs.jsonl 로 커밋된다)
+/.harness/runs/
+/.harness/.gh-cache.json
+/.harness/drafts/
+
+# python bytecode
+__pycache__/
+*.pyc
