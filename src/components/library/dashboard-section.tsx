@@ -123,7 +123,7 @@ export function DashboardSection() {
         원본은 flex-wrap + flex:'2 1 480px' / '1 1 360px'로 2:1을 만들었다.
         grid 3열 + col-span-2가 같은 비율을 임의값 없이 표현하고, **grid의 기본
         stretch 덕에 두 카드 높이가 자동으로 같아진다** — 연체 6건(`OVERDUE_LIMIT`)은
-        좌측 10행 표에 맞춰 계산한 값이지만(`_workspace/01_design-spec.md` §4),
+        좌측 10행 표에 맞춰 계산한 값이지만,
         폰트 렌더 차이로 몇 px 어긋나도 여기서 시각적으로 흡수된다.
       */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">

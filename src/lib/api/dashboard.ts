@@ -34,7 +34,7 @@ export type DashboardSummary = {
  * 목록 표시 건수. **모듈 상수로 고정한다.**
  *
  * 서버가 `@Cacheable(key = "#recentLoanLimit + '-' + #overdueLimit")`이라 limit을
- * 화면에서 흔들면 캐시 키가 조합마다 갈라진다. 값의 근거는 `_workspace/01_design-spec.md` §4:
+ * 화면에서 흔들면 캐시 키가 조합마다 갈라진다. 값의 근거:
  * - 최근 대출 10건 — 기획 확정
  * - 연체 6건 — 좌측 10행 표(≈610px)와 우측 카드 높이를 맞추는 최대 개수
  */
