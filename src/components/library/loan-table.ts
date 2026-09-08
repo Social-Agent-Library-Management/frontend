@@ -80,7 +80,7 @@ export const LOAN_COLUMNS: DataTableColumn<LoanSummary>[] = loanColumns({
  * 빈 값(미반납) 표기는 `LoanHistoryCard`의 `renderCell`이 담당한다.
  *
  * 폭은 `LOAN_COLUMNS` 비율을 기준선으로 반납일 11%를 배정한 뒤 정수 재배분한 값이다
- * (디자인 원본 폭 합 94%는 목업 오차 — `_workspace_20260901_130606/01_design-spec.md` §1).
+ * (디자인 원본 폭 합 94%는 목업 오차다).
  */
 export const LOAN_HISTORY_COLUMNS: DataTableColumn<LoanSummary>[] = loanColumns({
   managementNumber: "13%",
