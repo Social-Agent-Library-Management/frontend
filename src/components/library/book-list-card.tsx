@@ -16,7 +16,7 @@ import { useDebouncedValue } from "@/lib/use-debounced-value";
 export interface BookListCardProps {
   /** 값이 바뀌면 1페이지로 되돌린 뒤 재조회한다 */
   refreshToken?: number;
-  /** 페이지당 행 수. 기본 10 (API 기본값) */
+  /** 페이지당 행 수. 기본 20(`ReturnListCard`/`LoanHistoryCard`와 통일) */
   pageSize?: number;
   className?: string;
 }
@@ -33,7 +33,7 @@ export interface BookListCardProps {
  */
 export function BookListCard({
   refreshToken = 0,
-  pageSize = 10,
+  pageSize = 20,
   className,
 }: BookListCardProps) {
   const [query, setQuery] = React.useState("");

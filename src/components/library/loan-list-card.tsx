@@ -17,7 +17,7 @@ import {
 export interface LoanListCardProps {
   /** 값이 바뀌면 1페이지로 되돌린 뒤 재조회한다 */
   refreshToken?: number;
-  /** 페이지당 행 수. 기본 10 (API 기본값) */
+  /** 페이지당 행 수. 기본 20(`ReturnListCard`/`LoanHistoryCard`와 통일) */
   pageSize?: number;
   className?: string;
 }
@@ -30,7 +30,7 @@ export interface LoanListCardProps {
  */
 export function LoanListCard({
   refreshToken = 0,
-  pageSize = 10,
+  pageSize = 20,
   className,
 }: LoanListCardProps) {
   const [page, setPage] = React.useState(1);

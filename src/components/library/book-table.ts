@@ -12,11 +12,8 @@ import type { BookItemSearchRow, BookItemStatus } from "@/lib/api/bookitems";
  */
 
 /**
- * 도서 목록/검색 결과 5컬럼. `BookListCard`(`#7`)와 `BookSearchResultCard`(`#23`)가 공유한다.
- *
- * 두 화면은 행 타입도 컬럼 **집합**도 같으므로 배열을 하나만 둔다.
- * (`loan-table.ts`가 배열을 둘 둔 이유는 집합이 달라서지 화면이 달라서가 아니다 —
- * 폭만 다른 클론을 만드는 것은 그 문서가 경계하는 드리프트 그 자체다.)
+ * 도서 목록 5컬럼(`BookListCard`, `#7`). ISBN을 표시한다 — 관리자가 등록된 도서를
+ * 식별하는 화면이라 값이 필요하다.
  *
  * 폭 합계 88%는 디자인 원본 그대로다 — `table-auto`가 잔여 폭을 분배한다.
  * 소장본 수 셀은 순수 숫자다. "권" 같은 단위를 셀에 붙이지 말 것 — 단위는 헤더 라벨이 갖는다.
@@ -26,6 +23,19 @@ export const BOOK_COLUMNS: DataTableColumn<BookListItem>[] = [
   { key: "author", label: "저자", width: "14%" },
   { key: "publisher", label: "출판사", width: "16%", secondary: true },
   { key: "isbn", label: "ISBN", width: "20%", secondary: true, nowrap: true },
+  { key: "bookItemCount", label: "소장본 수", width: "10%" },
+];
+
+/**
+ * 도서 검색 결과 4컬럼(`BookSearchResultCard`, `#23`). `BOOK_COLUMNS`에서 ISBN만 뺀
+ * 집합이다 — 검색 자체는 여전히 ISBN 값을 지원하지만(백엔드 `q` 파라미터), 결과
+ * 표에는 노출하지 않는다. 폭 합계는 `BOOK_COLUMNS`와 같게 두고 `isbn` 한 줄만 지운다
+ * — 잔여 폭은 `table-auto`가 분배한다.
+ */
+export const BOOK_SEARCH_COLUMNS: DataTableColumn<BookListItem>[] = [
+  { key: "title", label: "도서명", width: "28%" },
+  { key: "author", label: "저자", width: "14%" },
+  { key: "publisher", label: "출판사", width: "16%", secondary: true },
   { key: "bookItemCount", label: "소장본 수", width: "10%" },
 ];
 
