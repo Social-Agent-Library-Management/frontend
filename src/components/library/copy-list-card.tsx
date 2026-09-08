@@ -29,7 +29,7 @@ import { useDebouncedValue } from "@/lib/use-debounced-value";
 export interface CopyListCardProps {
   /** 등록 폼 성공 신호(부모 소유). 값이 바뀌면 1페이지로 되돌린 뒤 재조회한다 */
   refreshToken?: number;
-  /** 페이지당 행 수. 기본 10 (API 기본값) */
+  /** 페이지당 행 수. 기본 20(`ReturnListCard`/`LoanHistoryCard`와 통일) */
   pageSize?: number;
   className?: string;
 }
@@ -70,7 +70,7 @@ const ACTION_LABEL: Record<ChangeableBookItemStatus, string> = {
  */
 export function CopyListCard({
   refreshToken = 0,
-  pageSize = 10,
+  pageSize = 20,
   className,
 }: CopyListCardProps) {
   const [managementNumber, setManagementNumber] = React.useState("");
