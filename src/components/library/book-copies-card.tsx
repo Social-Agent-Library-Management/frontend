@@ -9,7 +9,6 @@ import { ListErrorState } from "@/components/ui/list-error-state";
 import { StatusBadge } from "@/components/library/status-badge";
 import {
   BOOK_ITEM_COLUMNS,
-  formatIsbn,
   toBookItemBadgeStatus,
 } from "@/components/library/book-table";
 import { isApiError } from "@/lib/api/client";
@@ -25,7 +24,7 @@ export interface BookCopiesCardProps {
   /**
    * 좌측에서 선택된 도서. null이면 안내 문구만 렌더한다.
    *
-   * **`id`뿐 아니라 객체 전체를 받는다** — 제목·저자·출판사·ISBN이 여기에 이미 있어
+   * **`id`뿐 아니라 객체 전체를 받는다** — 제목·저자·출판사가 여기에 이미 있어
    * 상세 조회를 기다리지 않고 헤더와 메타 행을 즉시 그릴 수 있다.
    * `getBook()`이 필요한 것은 `bookItems` 하나뿐이다.
    */
@@ -124,10 +123,6 @@ export function BookCopiesCard({ book, className }: BookCopiesCardProps) {
             <div className="flex gap-1.5">
               <dt>출판사</dt>
               <dd className="font-semibold text-fg">{book.publisher}</dd>
-            </div>
-            <div className="flex gap-1.5">
-              <dt>ISBN</dt>
-              <dd className="font-semibold text-fg">{formatIsbn(book.isbn)}</dd>
             </div>
           </dl>
 
