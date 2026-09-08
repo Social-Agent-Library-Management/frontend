@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Toast, type ToastTone } from "@/components/ui/toast";
 import { isApiError } from "@/lib/api/client";
-import { createBook, DUPLICATE_ISBN_CODE, type Book } from "@/lib/api/books";
+import { createBook, type Book } from "@/lib/api/books";
 
 export interface BookRegisterFormProps {
   /** 등록 성공 시 호출 (목록 refetch 트리거) */
@@ -20,14 +20,12 @@ type BookRegisterFormValues = {
   title: string;
   author: string;
   publisher: string;
-  isbn: string;
 };
 
 const EMPTY_VALUES: BookRegisterFormValues = {
   title: "",
   author: "",
   publisher: "",
-  isbn: "",
 };
 
 type ToastState = { open: boolean; tone: ToastTone; message: string };
@@ -42,7 +40,8 @@ const CLOSED_TOAST: ToastState = {
  * 도서 등록 폼.
  *
  * 필수 검증은 네이티브 `required`에 맡긴다(별도 검증 라이브러리 없음).
- * 409(DUPLICATE_ISBN)만 ISBN 필드 에러로 내리고, 나머지 실패는 토스트로 알린다.
+ * ISBN은 수집하지 않는다 — 등록 화면에서 뺐다(백엔드 `POST /books`는 여전히
+ * 선택 필드로 지원하지만, 이 폼은 값을 보내지 않는다).
  */
 export function BookRegisterForm({
   onCreated,
@@ -51,32 +50,25 @@ export function BookRegisterForm({
   const [values, setValues] =
     React.useState<BookRegisterFormValues>(EMPTY_VALUES);
   const [submitting, setSubmitting] = React.useState(false);
-  const [isbnError, setIsbnError] = React.useState<string | null>(null);
   const [toast, setToast] = React.useState<ToastState>(CLOSED_TOAST);
 
   function updateField(field: keyof BookRegisterFormValues, value: string) {
     setValues((prev) => ({ ...prev, [field]: value }));
-    // 수정 중에 옛 에러가 남지 않게 즉시 되돌린다.
-    if (field === "isbn") setIsbnError(null);
   }
 
   function handleReset() {
     setValues(EMPTY_VALUES);
-    setIsbnError(null);
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
-    setIsbnError(null);
 
-    const isbn = values.isbn.trim();
     try {
       const book = await createBook({
         title: values.title.trim(),
         author: values.author.trim(),
         publisher: values.publisher.trim(),
-        isbn: isbn === "" ? null : isbn,
       });
       setValues(EMPTY_VALUES);
       setToast({
@@ -86,18 +78,13 @@ export function BookRegisterForm({
       });
       onCreated?.(book);
     } catch (error) {
-      if (isApiError(error) && error.code === DUPLICATE_ISBN_CODE) {
-        // 필드 에러로만 내린다 — 토스트는 띄우지 않는다.
-        setIsbnError(error.detail);
-      } else {
-        setToast({
-          open: true,
-          tone: "danger",
-          message: isApiError(error)
-            ? error.detail
-            : "도서 등록에 실패했습니다. 잠시 후 다시 시도해 주세요.",
-        });
-      }
+      setToast({
+        open: true,
+        tone: "danger",
+        message: isApiError(error)
+          ? error.detail
+          : "도서 등록에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -129,15 +116,6 @@ export function BookRegisterForm({
             value={values.publisher}
             onChange={(e) => updateField("publisher", e.target.value)}
             placeholder="출판사를 입력하세요"
-            autoComplete="off"
-          />
-          <Input
-            label="ISBN"
-            value={values.isbn}
-            onChange={(e) => updateField("isbn", e.target.value)}
-            hint="13자리 ISBN을 입력하세요"
-            error={isbnError ?? undefined}
-            inputMode="numeric"
             autoComplete="off"
           />
         </div>

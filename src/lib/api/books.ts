@@ -82,7 +82,6 @@ export type CreateBookInput = {
   author: string;
   /** POST /books 계약상 필수(non-blank) */
   publisher: string;
-  isbn?: string | null;
 };
 
 export type SearchBooksParams = {
@@ -92,9 +91,6 @@ export type SearchBooksParams = {
   /** 기본 10, 최대 100 */
   pageSize?: number;
 };
-
-/** 백엔드 BookError 코드 */
-export const DUPLICATE_ISBN_CODE = "DUPLICATE_ISBN";
 
 /** POST /books — 201 BookResponse */
 export function createBook(

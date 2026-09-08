@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { ListErrorState } from "@/components/ui/list-error-state";
-import { BOOK_COLUMNS, formatIsbn } from "@/components/library/book-table";
+import { BOOK_COLUMNS } from "@/components/library/book-table";
 import { isApiError } from "@/lib/api/client";
 import { searchBooks, type BookListItem, type BookSearchResult } from "@/lib/api/books";
 import { useDebouncedValue } from "@/lib/use-debounced-value";
@@ -127,11 +127,6 @@ export function BookListCard({
           rows={rows}
           loading={loading}
           emptyText="검색 결과가 없습니다."
-          renderCell={(col, value, row) =>
-            col.key === "isbn"
-              ? formatIsbn(row.isbn)
-              : (value as React.ReactNode)
-          }
           serverPagination={{ page, pageSize, total, onPageChange: setPage }}
         />
       )}
