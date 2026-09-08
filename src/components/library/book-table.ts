@@ -17,7 +17,7 @@ import type { BookItemSearchRow, BookItemStatus } from "@/lib/api/bookitems";
  * 두 화면은 행 타입도 컬럼 **집합**도 같으므로 배열을 하나만 둔다
  * (`loan-table.ts`가 배열을 둘 둔 이유는 집합이 달라서지 화면이 달라서가 아니다).
  * ISBN은 어느 화면에도 노출하지 않는다 — 등록 화면이 ISBN을 더 이상 수집하지 않아
- * 목록에 보여줄 근거가 없다(도서 상세의 소장본 패널은 여전히 `formatIsbn`으로 표시한다).
+ * 목록·상세 어디에도 보여줄 근거가 없다.
  *
  * 폭 합계 68%는 원래 5컬럼(88%)에서 `isbn`(20%) 한 줄만 지운 값이다 — `table-auto`가
  * 잔여 폭을 분배한다.
@@ -64,11 +64,6 @@ export const BOOK_ITEM_SEARCH_COLUMNS: DataTableColumn<BookItemSearchRow>[] = [
 
 /** 표에서 값이 없을 때의 표기 */
 export const EMPTY_CELL = "—";
-
-/** ISBN은 nullable이다. 빈 셀 대신 `—`로 "없음"을 명시한다(두 도서 표가 공유). */
-export function formatIsbn(isbn: string | null): string {
-  return isbn === null || isbn === "" ? EMPTY_CELL : isbn;
-}
 
 /**
  * 소장본 상태 → 상태 배지 어휘.
