@@ -29,7 +29,7 @@ export interface DataTableProps<T extends Record<string, unknown>> {
   ) => React.ReactNode;
   /**
    * rows가 비었을 때 표시할 내용. 문자열이 기본이지만 노드도 받는다
-   * (`BookSearchResultCard`의 오타 교정 제안처럼 빈 상태에 액션이 붙는 경우, `#29`).
+   * (빈 상태에 재시도·액션 등이 붙는 경우를 위해 열어둔다).
    * 빈 셀 td는 이미 `text-center text-body text-fg-muted`다 — 노드를 넣을 때
    * 정렬·기본 색을 다시 지정하지 말 것.
    */

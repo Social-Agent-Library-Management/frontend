@@ -56,9 +56,9 @@ export function hasBatchim(word: string): boolean {
   return DIGITS_WITH_BATCHIM.has(word[word.length - 1]);
 }
 
-/** 목적격 조사: 받침 있으면 `을`, 없으면 `를`을 붙인 문자열을 반환한다. */
-export function withEul(word: string): string {
-  return `${word}${hasBatchim(word) ? "을" : "를"}`;
+/** 보조사(주제): 받침 있으면 `은`, 없으면 `는`을 붙인 문자열을 반환한다. */
+export function withEun(word: string): string {
+  return `${word}${hasBatchim(word) ? "은" : "는"}`;
 }
 
 /**

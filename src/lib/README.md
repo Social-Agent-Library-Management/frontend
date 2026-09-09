@@ -45,7 +45,7 @@ null을 내려준다. `status=ON_LOAN`으로 좁힌 목록에는 항상 값이 �
 | 모듈 | 함수 | 규칙 |
 |---|---|---|
 | `dday.ts` | `getUrgency` / `formatDday` | `DdayCard`가 사용 |
-| `korean-particle.ts` | `hasBatchim` / `withEul` / `withEuro` | 조사 분기를 컴포넌트에 인라인하지 말 것 — 받침 판정이 화면마다 갈라진다 |
+| `korean-particle.ts` | `hasBatchim` / `withEun` / `withEuro` | 조사 분기를 컴포넌트에 인라인하지 말 것 — 받침 판정이 화면마다 갈라진다 |
 | `use-debounced-value.ts` | — | 디바운스를 컴포넌트에 인라인하지 말 것 — 지연 시간이 갈라진다 |
 | `download.ts` | `downloadBlob(blob, filename)` | 파일명은 **항상 서버의 `Content-Disposition`**에서 온다. 클라이언트에서 조합한 이름으로 저장하지 말 것 |
 

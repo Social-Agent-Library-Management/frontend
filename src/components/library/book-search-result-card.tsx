@@ -3,7 +3,6 @@
 import * as React from "react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import { ListErrorState } from "@/components/ui/list-error-state";
@@ -14,9 +13,17 @@ import {
   type BookListItem,
   type BookSearchResult,
 } from "@/lib/api/books";
-import { withEul, withEuro } from "@/lib/korean-particle";
 import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { cn } from "@/lib/utils";
+
+/** 오타 교정 제안 배너(`BookSearchSection`)를 채우는 정보. 제안이 없으면 `null`. */
+export type SuggestionInfo = {
+  /** 검색어(디바운스 후, 트림됨) — 배너 문구에 쓴다. */
+  query: string;
+  suggestion: string;
+  /** 현재 페이지에 결과 행이 있는지 — 배너 문구 분기에만 쓴다. */
+  hasResults: boolean;
+};
 
 export interface BookSearchResultCardProps {
   /** 검색어 **원본**(디바운스 전). 지연은 이 카드가 `useDebouncedValue`로 처리한다. */
@@ -26,11 +33,13 @@ export interface BookSearchResultCardProps {
   /** 행 클릭 — 선택 상태는 부모(`BookSearchSection`)가 소유한다 */
   onSelect: (book: BookListItem) => void;
   /**
-   * 오타 교정 제안어로 다시 검색 — 검색어는 이 카드가 소유하지 않는다
-   * (`selectedId`와 같은 이유로 부모 `BookSearchSection`에 위임한다).
-   * 제안이 없으면 호출되지 않는다.
+   * 오타 교정 제안 정보가 바뀔 때마다 알린다(제안이 없으면 `null`).
+   *
+   * 배너 자체는 `BookSearchSection`의 검색바 카드 안에 렌더된다(디자인 배치) — 이 카드는
+   * `noPadding` 결과 카드라 배너가 들어갈 자리가 다르다. 그래서 배너를 렌더하는 대신
+   * 파생값만 이펙트로 부모에 올린다. `selectedId`와 반대 방향이지만 같은 이유(소유권 분리)다.
    */
-  onSuggestionSearch: (term: string) => void;
+  onSuggestionChange?: (info: SuggestionInfo | null) => void;
   /** 페이지당 행 수. 기본 20(`ReturnListCard`/`LoanHistoryCard`와 통일) */
   pageSize?: number;
   className?: string;
@@ -50,7 +59,7 @@ export function BookSearchResultCard({
   query,
   selectedId,
   onSelect,
-  onSuggestionSearch,
+  onSuggestionChange,
   pageSize = 20,
   className,
 }: BookSearchResultCardProps) {
@@ -99,12 +108,23 @@ export function BookSearchResultCard({
   const result = settled.result;
   const rows = result?.books ?? [];
   const total = result?.pagination.totalElements ?? 0;
-  // 트리거는 `suggestion` 존재 여부 하나뿐이다. `rows.length === 0 && !loading && !error`를
-  // 덧붙이지 않는 이유: 에러면 아래 삼항이 DataTable 자체를 렌더하지 않고, DataTable은
-  // `total === 0 && !loading`일 때만 emptyText를 그린다(호출부가 그 규칙을 복제하면 갈라진다).
-  // 스테일 제안이 새 검색어의 빈 상태에 새지도 않는다 — 로딩 중에는 loadingText가 그려지고,
-  // 정착 후 `result`는 항상 현재 검색어의 결과다.
-  const suggestion = result?.suggestion ?? null;
+  // 트리거는 `suggestion` 존재 여부 하나뿐이다 — 서버가 이미 "오타로 판단되는지"를
+  // 결정해 내려주므로(`exactSubstringHits == 0`), 결과 건수(`total`/`pagination.totalElements`)로
+  // 다시 게이팅하지 않는다. 서버 코멘트도 "결과 건수와 무관하게 내려간다"고 명시한다 —
+  // 즉 검색 결과가 있어도(느슨한 매칭으로 몇 건이 나와도) 오타 제안은 별개로 뜰 수 있다.
+  // 에러 시에는 `result`가 직전 성공 응답을 그대로 들고 있어(아래 catch 참조) 오래된
+  // 제안이 뜰 수 있으므로 `!error`로 막는다.
+  const suggestion = !error && result ? result.suggestion : null;
+
+  // 배너는 이 카드가 렌더하지 않는다(디자인상 검색바 카드 소속) — 파생값만 부모에 올린다.
+  // `onSuggestionChange`가 매 렌더 새 함수면 이펙트가 매번 재실행되지만, 부모가
+  // `useState` setter(참조 안정)를 그대로 넘기는 한 문제 없다 — 새 함수를 넘기려면
+  // 호출부가 `useCallback`으로 감싸야 한다.
+  React.useEffect(() => {
+    onSuggestionChange?.(
+      suggestion ? { query: q, suggestion, hasResults: rows.length > 0 } : null,
+    );
+  }, [q, suggestion, rows.length, onSuggestionChange]);
 
   return (
     <Card
@@ -126,16 +146,7 @@ export function BookSearchResultCard({
           columns={BOOK_COLUMNS}
           rows={rows}
           loading={loading}
-          emptyText={
-            suggestion ? (
-              <SuggestionEmptyState
-                suggestion={suggestion}
-                onSearch={onSuggestionSearch}
-              />
-            ) : (
-              "검색 결과가 없습니다."
-            )
-          }
+          emptyText="검색 결과가 없습니다."
           onRowClick={(row) => onSelect(row)}
           renderCell={(col, value, row) => {
             if (col.key === "title" && row.id === selectedId) {
@@ -154,50 +165,5 @@ export function BookSearchResultCard({
         />
       )}
     </Card>
-  );
-}
-
-interface SuggestionEmptyStateProps {
-  /** 서버가 제안한 교정 검색어. 비어 있지 않음이 호출부에서 보장된다. */
-  suggestion: string;
-  onSearch: (term: string) => void;
-}
-
-/**
- * 검색 결과 0건 + 서버 오타 교정 제안이 있을 때의 빈 상태(`#29`).
- *
- * **`ui/`로 올리지 않는다** — 소비자가 이 파일 하나뿐이고 문구가 도서 검색 도메인
- * 전용이다(`ui/pagination.tsx`의 내부 `PageButton`과 같은 취급). `export`하지 않는다.
- *
- * 정렬·글자색·글자크기는 `DataTable`의 빈 셀 td가 이미 소유한다
- * (`text-center text-body text-fg-muted`) — 여기서 다시 지정하지 않는다.
- */
-function SuggestionEmptyState({
-  suggestion,
-  onSearch,
-}: SuggestionEmptyStateProps) {
-  return (
-    // 표 자리에 조작 가능한 요소(버튼)가 새로 나타나므로 등장을 알린다
-    // (같은 슬롯을 쓰는 `ListErrorState`와 동일한 선례).
-    <div role="status">
-      <div>검색 결과가 없습니다.</div>
-      <p className="mt-3.5 text-base">
-        {/* 조사가 따옴표 **밖**에 와야 해서(`"가족복지론"을`) withEul이 돌려준
-            전체 문자열에서 조사 부분만 떼어낸다. 조사만 반환하는 4번째 export를
-            만들지 않는다 — lib API를 "붙인 문자열 반환" 하나로 통일해 둔다. */}
-        혹시{" "}
-        {/* ⚠️ text-primary가 아니다 — 그건 브랜드 파랑이다. 강조 텍스트는 text-fg. */}
-        <strong className="font-semibold text-fg">{`"${suggestion}"`}</strong>
-        {withEul(suggestion).slice(suggestion.length)} 찾으셨나요?
-      </p>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="mt-2.5"
-        onClick={() => onSearch(suggestion)}
-      >
-        {withEuro(suggestion)} 다시 검색
-      </Button>
-    </div>
   );
 }
