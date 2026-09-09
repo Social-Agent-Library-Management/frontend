@@ -19,9 +19,6 @@
     "PostToolUseFailure": [
       { "matcher": "*", "hooks": [ { "type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/harness_log.py", "args": ["log"], "async": true } ] }
     ],
-    "PostModelSwitch": [
-      { "hooks": [ { "type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/harness_log.py", "args": ["log"], "async": true } ] }
-    ],
     "PreToolUse": [
       {
         "matcher": "Bash",

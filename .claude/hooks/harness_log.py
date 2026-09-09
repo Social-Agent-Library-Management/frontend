@@ -161,6 +161,10 @@ def mode_log(payload: dict) -> None:
     elif event == "UserPromptSubmit":
         prompt = payload.get("user_prompt") or ""
         record["prompt"] = prompt[:400]
+        # 모델 전환 전용 훅 이벤트는 CLI에 없다(2.1.221에서 PostModelSwitch를
+        # 등록했다가 "Unknown hook event"로 무시당했다). 대신 요청마다 실모델을
+        # 남겨 세션 도중 전환을 요청 단위로 잡는다.
+        record["model"] = actual_model(payload) or ""
     elif event in ("PostToolUse", "PostToolUseFailure"):
         tool = payload.get("tool_name") or "?"
         args = payload.get("tool_input") or {}
@@ -169,10 +173,6 @@ def mode_log(payload: dict) -> None:
         record["target"] = str(target)[:160]
         if event == "PostToolUseFailure":
             record["err"] = str(payload.get("tool_error") or "")[:300]
-    elif event in ("PreModelSwitch", "PostModelSwitch"):
-        record["from_model"] = payload.get("from_model")
-        record["to_model"] = payload.get("to_model")
-        record["reason"] = payload.get("switch_reason")
     elif event == "SessionEnd":
         record["reason"] = payload.get("session_end_reason")
 
