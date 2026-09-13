@@ -14,7 +14,7 @@ API·유틸 레이어 규약은 **이 파일이 소유한다**. 컴포넌트 문
 - 에러는 `ApiError`로 정규화되고, 사용자 노출 문구는 `error.detail`이다.
 - 목록 응답의 `pagination` 봉투 타입(`PaginationMeta`)은 도메인 공통이라 `client.ts`가 소유한다 — 도메인 파일에 복제하지 말 것.
 - 에러 코드 상수는 도메인 파일 **한 곳**이 소유한다. `BOOK_ITEM_NOT_FOUND_CODE`는 `bookitems.ts`가 소유하고 `loans.ts`가 기존 임포트 경로 유지를 위해 재수출한다. 두 벌로 늘리지 말 것.
-- 타입은 **쓰는 화면이 아니라 속한 도메인**에 둔다. `OverdueLoanSummary`는 `loans.ts`가 소유하고 `dashboard.ts`가 임포트한다.
+- 타입은 **쓰는 화면이 아니라 속한 도메인**에 둔다. `OverdueLoanSummary`와 `LoanActivity`는 `loans.ts`가 소유하고 `dashboard.ts`가 임포트한다.
 - 서버가 별개 enum이면 프론트도 별개로 둔다 — `LoanSearchStatus`(3값, 검색 필터, `OVERDUE` 포함)와 `LoanStatus`(2값, 행의 도메인 상태)를 섞지 말 것.
 
 ## `apiFetch`를 쓸 수 없는 경우
@@ -31,11 +31,11 @@ multipart 요청·Blob 응답은 JSON 전용 계약에 맞지 않는다(`lib/api
 `lib/api/dashboard.ts`는 화면 전용 집계 엔드포인트(`GET /dashboard/summary`)를 감싼다.
 
 - 대시보드를 그리려고 `/books`·`/bookitems`·`/loans`를 각각 긁지 말 것 — 호출이 4~5개로 늘고 집계 기준일이 호출마다 갈라진다(서버는 `LocalDate.now()` 한 번으로 계산한다).
-- 표시 건수(`RECENT_LOAN_LIMIT` / `OVERDUE_LIMIT`)는 **모듈 상수로 고정**한다 — 서버가 limit 조합을 캐시 키로 쓰므로 화면에서 흔들면 캐시가 조합마다 갈라진다.
+- 표시 건수(`RECENT_ACTIVITY_LIMIT` / `OVERDUE_LIMIT`)는 **모듈 상수로 고정**한다 — 서버가 limit 조합을 캐시 키로 쓰므로 화면에서 흔들면 캐시가 조합마다 갈라진다. 쿼리 키(`recentActivityLimit`)와 상수명을 함께 맞춘다 — 서버 `@Cacheable` 키가 **파라미터 이름**에 걸려 있어 키 철자가 틀리면 캐시가 조용히 갈라진다.
 
 ## nullable 필드
 
-`LoanSummary.borrowerName`은 **nullable이다.** 반납 완료 건은 개인정보 파기로 서버가
+`LoanSummary.borrowerName`과 `LoanActivity.borrowerName`은 **nullable이다.** 반납 완료 건은 개인정보 파기로 서버가
 null을 내려준다. `status=ON_LOAN`으로 좁힌 목록에는 항상 값이 있지만, 상태 필터가 없는
 목록(대출 내역·대시보드 최근 활동)에는 실제로 섞인다. 표에서 그냥 렌더하면 빈 셀이
 되므로 `ui/EmptyCell`을 쓴다.
@@ -45,6 +45,7 @@ null을 내려준다. `status=ON_LOAN`으로 좁힌 목록에는 항상 값이 �
 | 모듈 | 함수 | 규칙 |
 |---|---|---|
 | `dday.ts` | `getUrgency` / `formatDday` | `DdayCard`가 사용 |
+| `relative-time.ts` | `formatRelativeTime` | `RecentLoansCard`가 사용. "N분 전" 계산을 셀에 인라인하지 말 것 — 경계값이 화면마다 갈라진다 |
 | `korean-particle.ts` | `hasBatchim` / `withEun` / `withEuro` | 조사 분기를 컴포넌트에 인라인하지 말 것 — 받침 판정이 화면마다 갈라진다 |
 | `use-debounced-value.ts` | — | 디바운스를 컴포넌트에 인라인하지 말 것 — 지연 시간이 갈라진다 |
 | `download.ts` | `downloadBlob(blob, filename)` | 파일명은 **항상 서버의 `Content-Disposition`**에서 온다. 클라이언트에서 조합한 이름으로 저장하지 말 것 |

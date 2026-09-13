@@ -128,7 +128,7 @@ export function DashboardSection() {
       */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <RecentLoansCard
-          rows={summary?.recentLoans ?? []}
+          rows={summary?.recentActivities ?? []}
           loading={loading}
           className="lg:col-span-2"
         />
