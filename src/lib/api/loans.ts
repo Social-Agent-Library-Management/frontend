@@ -91,6 +91,46 @@ export type OverdueLoanSummary = {
   overdueDays: number;
 };
 
+/**
+ * `GET /dashboard/summary`의 `recentActivities` 행 타입 (`#45`).
+ * 서버 `RecentLoanActivitiesService.LoanActivity`.
+ *
+ * `LoanSummary`에서 파생시키지 않는다 — 서버도 별개 클래스이고(`OverdueLoanSummary`와
+ * 같은 이유), 이 목록은 "대출 건"이 아니라 **대출/반납 이벤트**를 활동 시각
+ * (`updatedAt desc, id desc`) 내림차순으로 내려준다. `LoanSummary & { activityAt }`로
+ * 묶으면 서버에 없는 종속관계를 주장하게 된다.
+ *
+ * `LoanSummary`와 마찬가지로 `interface`가 아니라 `type` 별칭이어야 한다
+ * (`DataTable<T extends Record<string, unknown>>`의 암묵적 인덱스 시그니처 제약).
+ */
+export type LoanActivity = {
+  loanId: number;
+  managementNumber: string;
+  bookTitle: string;
+  /** 반납 완료 건은 개인정보 파기로 null — `LoanSummary.borrowerName`과 같은 규칙 */
+  borrowerName: string | null;
+  department: string;
+  /**
+   * LocalDate "YYYY-MM-DD". 응답에는 있지만 **대시보드 최근 활동 표는 그리지 않는다** —
+   * 정렬 기준이 활동 시각이라 대여일을 보여주면 정렬이 뒤죽박죽으로 보인다.
+   */
+  loanDate: string;
+  /** LocalDate "YYYY-MM-DD" */
+  dueDate: string;
+  /** LocalDate "YYYY-MM-DD" — 미반납이면 null */
+  returnedAt: string | null;
+  status: LoanStatus;
+  /** 서버가 계산한 연체 여부. **프론트에서 날짜로 재계산하지 않는다** */
+  overdue: boolean;
+  /**
+   * LocalDateTime ISO-8601 문자열(예: `"2026-09-13T14:05:00"`) — 대출 또는 반납이
+   * 발생한 시각. 표의 상대 시간("N분 전") 표시 기준이다(`lib/relative-time.ts`).
+   * **오프셋이 없어 `new Date()`가 로컬 시각으로 해석한다** — 서버와 클라이언트가
+   * 같은 타임존이라는 전제다.
+   */
+  activityAt: string;
+};
+
 export type CreateLoanInput = {
   managementNumber: string;
   borrowerName: string;

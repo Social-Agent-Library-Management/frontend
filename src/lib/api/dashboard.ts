@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api/client";
-import type { LoanSummary, OverdueLoanSummary } from "@/lib/api/loans";
+import type { LoanActivity, OverdueLoanSummary } from "@/lib/api/loans";
 
 /**
  * 대시보드(Dashboard) API.
@@ -24,8 +24,12 @@ export type DashboardSummary = {
    * `overdueLoans.length`가 아니라 이 값이 전체 건수다 — 목록은 `overdueLimit`으로 잘려 있다.
    */
   overdueLoanCount: number;
-  /** 최근 대출 활동 — 대여일 내림차순. **상태 필터가 없어 반납 완료 건이 섞인다** */
-  recentLoans: LoanSummary[];
+  /**
+   * 최근 활동 — **대출과 반납이 모두 섞인다**. 활동 시각(`activityAt`) 내림차순
+   * (서버 `updatedAt desc, id desc`). 상태 필터가 없어 반납 완료 건이 들어오므로
+   * `borrowerName`이 null인 행이 실제로 섞인다.
+   */
+  recentActivities: LoanActivity[];
   /** 연체 목록 — 경과일 내림차순 */
   overdueLoans: OverdueLoanSummary[];
 };
@@ -33,12 +37,12 @@ export type DashboardSummary = {
 /**
  * 목록 표시 건수. **모듈 상수로 고정한다.**
  *
- * 서버가 `@Cacheable(key = "#recentLoanLimit + '-' + #overdueLimit")`이라 limit을
+ * 서버가 `@Cacheable(key = "#recentActivityLimit + '-' + #overdueLimit")`이라 limit을
  * 화면에서 흔들면 캐시 키가 조합마다 갈라진다. 값의 근거:
- * - 최근 대출 10건 — 기획 확정
+ * - 최근 활동 10건 — 기획 확정
  * - 연체 6건 — 좌측 10행 표(≈610px)와 우측 카드 높이를 맞추는 최대 개수
  */
-export const RECENT_LOAN_LIMIT = 10;
+export const RECENT_ACTIVITY_LIMIT = 10;
 export const OVERDUE_LIMIT = 6;
 
 /** GET /dashboard/summary */
@@ -47,7 +51,7 @@ export function getDashboardSummary(
 ): Promise<DashboardSummary> {
   return apiFetch<DashboardSummary>("/dashboard/summary", {
     query: {
-      recentLoanLimit: RECENT_LOAN_LIMIT,
+      recentActivityLimit: RECENT_ACTIVITY_LIMIT,
       overdueLimit: OVERDUE_LIMIT,
     },
     signal,
