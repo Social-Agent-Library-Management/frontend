@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR } from "next/font/google";
 import "./globals.css";
 
@@ -21,6 +21,23 @@ export const metadata: Metadata = {
     template: "%s · 도서 관리 시스템",
   },
   description: "도서 등록·대출·반납·연체를 관리하는 도서관 운영 시스템",
+  /**
+   * 오프라인 윈도우 PC에서 "설치형 앱"처럼 쓰기 위한 PWA 매니페스트.
+   * Edge의 '앱으로 설치'가 여기서 이름·아이콘·독립 창(standalone)을 읽어간다.
+   */
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+  },
+};
+
+/** themeColor는 Next 14부터 metadata가 아닌 viewport로 분리됐다. */
+export const viewport: Viewport = {
+  themeColor: "#007aff",
 };
 
 export default function RootLayout({
