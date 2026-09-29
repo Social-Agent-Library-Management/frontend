@@ -15,7 +15,7 @@ export default function BookSearchPage() {
     <>
       <PageHeader
         title="도서 검색"
-        description="도서를 검색하고 행을 선택하면 소장본 목록이 표시됩니다"
+        description="도서를 검색하면 첫 번째 도서의 소장본이 바로 표시되고, 다른 행을 선택해 바꿀 수 있습니다"
       />
       <BookSearchSection />
     </>

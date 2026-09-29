@@ -35,7 +35,12 @@ export function BookSearchSection({
   className,
 }: BookSearchSectionProps) {
   const [search, setSearch] = React.useState("");
-  const [selected, setSelected] = React.useState<BookListItem | null>(null);
+  // `auto` = 검색 응답의 첫 행이 자동으로 선택됨. 사용자 클릭(`auto: false`)은 자동 선택에
+  // 덮이지 않는다 — 페이지를 오가며 1페이지 응답이 다시 와도 사용자 선택이 유지된다.
+  const [selected, setSelected] = React.useState<{
+    book: BookListItem;
+    auto: boolean;
+  } | null>(null);
   // 배너는 이 섹션의 검색바 카드 안에서 렌더한다(디자인 배치) — 실제 파생은
   // `BookSearchResultCard`가 소유하고 이펙트로 여기 올려준다.
   const [suggestionInfo, setSuggestionInfo] =
@@ -54,6 +59,16 @@ export function BookSearchSection({
     setSearch(term);
     setSelected(null);
   }
+
+  function handleSelect(book: BookListItem) {
+    setSelected({ book, auto: false });
+  }
+
+  // 함수형 업데이트라 최신 선택을 보고 판단한다. 이전 자동 선택은 교체하므로
+  // 늦게 도착한 새 검색어 응답이 이전 검색어의 첫 행을 밀어낸다.
+  const handleAutoSelect = React.useCallback((book: BookListItem) => {
+    setSelected((prev) => (prev && !prev.auto ? prev : { book, auto: true }));
+  }, []);
 
   return (
     <div className={className}>
@@ -86,12 +101,13 @@ export function BookSearchSection({
       <div className="flex flex-wrap gap-5">
         <BookSearchResultCard
           query={search}
-          selectedId={selected?.id ?? null}
-          onSelect={setSelected}
+          selectedId={selected?.book.id ?? null}
+          onSelect={handleSelect}
+          onAutoSelect={handleAutoSelect}
           onSuggestionChange={setSuggestionInfo}
           pageSize={pageSize}
         />
-        <BookCopiesCard book={selected} />
+        <BookCopiesCard book={selected?.book ?? null} />
       </div>
     </div>
   );
