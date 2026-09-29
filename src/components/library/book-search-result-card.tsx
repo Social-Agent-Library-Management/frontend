@@ -20,10 +20,13 @@ import { cn } from "@/lib/utils";
 export type SuggestionInfo = {
   /** 검색어(디바운스 후, 트림됨) — 배너 문구에 쓴다. */
   query: string;
-  suggestion: string;
+  /** 서버가 내려준 오타 교정 후보. 최대 3개, 항상 1개 이상(빈 배열이면 `null`로 올린다). */
+  suggestions: string[];
   /** 현재 페이지에 결과 행이 있는지 — 배너 문구 분기에만 쓴다. */
   hasResults: boolean;
 };
+
+const NO_SUGGESTIONS: string[] = [];
 
 export interface BookSearchResultCardProps {
   /** 검색어 **원본**(디바운스 전). 지연은 이 카드가 `useDebouncedValue`로 처리한다. */
@@ -108,13 +111,16 @@ export function BookSearchResultCard({
   const result = settled.result;
   const rows = result?.books ?? [];
   const total = result?.pagination.totalElements ?? 0;
-  // 트리거는 `suggestion` 존재 여부 하나뿐이다 — 서버가 이미 "오타로 판단되는지"를
+  // 트리거는 `suggestions` 배열이 비어있는지 하나뿐이다 — 서버가 이미 "오타로 판단되는지"를
   // 결정해 내려주므로(`exactSubstringHits == 0`), 결과 건수(`total`/`pagination.totalElements`)로
   // 다시 게이팅하지 않는다. 서버 코멘트도 "결과 건수와 무관하게 내려간다"고 명시한다 —
   // 즉 검색 결과가 있어도(느슨한 매칭으로 몇 건이 나와도) 오타 제안은 별개로 뜰 수 있다.
   // 에러 시에는 `result`가 직전 성공 응답을 그대로 들고 있어(아래 catch 참조) 오래된
   // 제안이 뜰 수 있으므로 `!error`로 막는다.
-  const suggestion = !error && result ? result.suggestion : null;
+  // 배포 시차로 필드가 `undefined`여도 빈 배열로 수렴시킨다. 폴백은 모듈 상수여야 한다 —
+  // `[]` 리터럴은 매 렌더 새 참조라 아래 이펙트가 매번 재실행된다.
+  const suggestions =
+    (!error && result ? result.suggestions : undefined) ?? NO_SUGGESTIONS;
 
   // 배너는 이 카드가 렌더하지 않는다(디자인상 검색바 카드 소속) — 파생값만 부모에 올린다.
   // `onSuggestionChange`가 매 렌더 새 함수면 이펙트가 매번 재실행되지만, 부모가
@@ -122,9 +128,11 @@ export function BookSearchResultCard({
   // 호출부가 `useCallback`으로 감싸야 한다.
   React.useEffect(() => {
     onSuggestionChange?.(
-      suggestion ? { query: q, suggestion, hasResults: rows.length > 0 } : null,
+      suggestions.length > 0
+        ? { query: q, suggestions, hasResults: rows.length > 0 }
+        : null,
     );
-  }, [q, suggestion, rows.length, onSuggestionChange]);
+  }, [q, suggestions, rows.length, onSuggestionChange]);
 
   return (
     <Card

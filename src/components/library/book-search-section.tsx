@@ -112,7 +112,7 @@ interface SuggestionBannerProps {
  * 검색바 카드 안, 입력 행 바로 아래에 렌더한다(디자인 배치) — 구분선을 넣지 않는다.
  */
 function SuggestionBanner({ info, onSearch }: SuggestionBannerProps) {
-  const { query, suggestion, hasResults } = info;
+  const { query, suggestions, hasResults } = info;
   return (
     // 카드 안에 조작 가능한 요소(링크)가 새로 나타나므로 등장을 알린다
     // (상태를 알리는 `ListErrorState`와 동일한 선례).
@@ -124,14 +124,22 @@ function SuggestionBanner({ info, onSearch }: SuggestionBannerProps) {
           // 조사 부분만 떼어낸다(아래 withEuro와 동일 기법).
           `${withEun(query).slice(query.length)} 오타일 수 있어요.`
         : "에 대한 검색 결과가 없습니다."}{" "}
-      <button
-        type="button"
-        className="cursor-pointer font-semibold text-primary hover:underline"
-        onClick={() => onSearch(suggestion)}
-      >
-        {`"${suggestion}"`}
-        {withEuro(suggestion).slice(suggestion.length)} 검색
-      </button>
+      {/* 서버가 최대 3개까지 후보를 내려준다 — 후보마다 받침에 맞는 조사가
+          달라질 수 있어(withEuro) 버튼마다 개별 계산한다. */}
+      {suggestions.map((suggestion, i) => (
+        // 서버가 같은 후보를 두 번 내려도 key가 겹치지 않게 인덱스를 섞는다.
+        <React.Fragment key={`${i}-${suggestion}`}>
+          {i > 0 ? " / " : ""}
+          <button
+            type="button"
+            className="cursor-pointer font-semibold text-primary hover:underline"
+            onClick={() => onSearch(suggestion)}
+          >
+            {`"${suggestion}"`}
+            {withEuro(suggestion).slice(suggestion.length)} 검색
+          </button>
+        </React.Fragment>
+      ))}
     </p>
   );
 }
