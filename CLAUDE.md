@@ -26,6 +26,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 | **왜 그렇게 결정했는가** | **커밋 본문** — README에 경위를 쓰지 않는다 |
 | API·유틸 레이어 규약 | `src/lib/README.md` |
 | 실행이 실제로 어떻게 돌아갔는가 | `.harness/metrics.md` (로깅 훅이 자동 기록) |
+| 코드 → Claude Design 역동기화 규칙·연결 정보 | `.design-sync/NOTES.md`, `.design-sync/config.json` |
 
 **실행 계측:** `.claude/hooks/harness_log.py`가 `SessionStart`/`SubagentStart|Stop`/`PostToolUse(Failure)`를 `.harness/runs/<session>.jsonl`에 기록한다(원시 로그는 gitignore, 요약·리포트는 커밋). 훅은 받아적기만 하고 집계는 `.claude/scripts/harness_report.py`가 오프라인으로 한다 — 훅 버그가 실행을 깨뜨리지 않게 하기 위함. 게이트 2개만 동기 실행된다: 커밋 트레일러 모델명 자동 교정(유일한 차단 지점), PR 생성 시 파이프라인 충실도 경고(차단 안 함). 회귀 테스트는 `python3 .claude/scripts/test_harness_log.py`.
 
@@ -36,3 +37,4 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 | 2026-08-04 | Git/PR 자동화 추가 (git-pr-workflow 스킬, .github 템플릿, 오케스트레이터 Phase 5 발행 단계, B안 트레일러) | 스킬/워크플로/CLAUDE.md | 하네스 사용 시 Quizly 컨벤션대로 커밋·PR까지 발행 |
 | 2026-08-09 | 문서 동기화 추가 (README 컴포넌트 인벤토리 신설 + 아키텍트 조회·구현자 갱신·QA 검증), 커밋 분할 정책 명문화 | README/스킬 4종/CLAUDE.md | 기능은 인벤토리+git, 하네스 변경만 이 표에 기록하도록 역할 분리 |
 | 2026-09-08 | 실행 계측 도입 (로깅 훅 + 소급 베이스라인 리포터 + 회귀 테스트), `src/lib/README.md` 분리, 모델 트레일러 자동 스탬프 | .claude/hooks·scripts/src/lib/README.md/스킬 3종/CLAUDE.md | 과거 20개 PR 계측 결과 파이프라인 생략 10건·모델 오표기 18건이 무기록으로 발생 — 재연성·오류 원인 추적을 위해 계측 추가. `src/components/README.md` 재구조화는 PR #28과 충돌하므로 후속 이슈로 분리 |
+| 2026-10-29 | 코드→디자인 역동기화 기록(`.design-sync/`) 추가, 입력 해석에 Claude 아티팩트 링크 추가 | .design-sync/스킬 2종/CLAUDE.md/.gitignore | 급한 수정으로 디자인과 코드가 어긋나 배포 코드 기준으로 디자인 프로젝트를 갱신함. 단독 claude.ai/design이 2026-12-14 종료·아티팩트로 이전되므로 하네스가 이전된 링크를 읽을 수 있게 함 |
