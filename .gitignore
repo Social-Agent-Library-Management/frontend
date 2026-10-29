@@ -54,3 +54,7 @@ next-env.d.ts
 # python bytecode
 __pycache__/
 *.pyc
+
+# Claude Design 동기화 작업물 (기록은 .design-sync/ 의 config·NOTES 로 커밋된다)
+/.design-sync/backup/
+/.design-sync/work/
