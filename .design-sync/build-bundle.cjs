@@ -1,25 +1,32 @@
-// Builds _ds_bundle.js (format 4, same shape as the existing project bundle)
-// from components/<group>/<Name>.jsx inside the given root dir.
-// usage: node build-bundle.cjs <root> <namespace> <out>
+// Builds components/bundle.js for the design-system artifact from components/src/<group>/<Name>.jsx.
+// Same bundle format as the artifact expects (classic script, `/* @ds-bundle: {...} */` header,
+// assigns window.<namespace>). Uses the Babel that ships with Next.js — no extra install.
+//
+// usage: node .design-sync/build-bundle.cjs [projectDir] [namespace]
+//   projectDir defaults to .design-sync/artifact/project, namespace to DesignSystem_307f43
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const NEXT = '/Users/chanyoung/Desktop/Code/Library/frontend/node_modules/next/dist/compiled/babel';
-const babel = require(NEXT + '/core');
-const presetReact = require(NEXT + '/preset-react');
 
-const [root, namespace, out] = process.argv.slice(2);
-const compDir = path.join(root, 'components');
+const REPO = path.resolve(__dirname, '..');
+const NEXT_BABEL = path.join(REPO, 'node_modules/next/dist/compiled/babel');
+const babel = require(path.join(NEXT_BABEL, 'core'));
+const presetReact = require(path.join(NEXT_BABEL, 'preset-react'));
 
-// collect files
+const root = path.resolve(process.argv[2] || path.join(__dirname, 'artifact/project'));
+const namespace = process.argv[3] || 'DesignSystem_307f43';
+const srcDir = path.join(root, 'components/src');
+const out = path.join(root, 'components/bundle.js');
+
+// collect components/src/<group>/<Name>.jsx
 const files = [];
-for (const group of fs.readdirSync(compDir).sort()) {
-  const gdir = path.join(compDir, group);
+for (const group of fs.readdirSync(srcDir).sort()) {
+  const gdir = path.join(srcDir, group);
   if (!fs.statSync(gdir).isDirectory()) continue;
-  for (const f of fs.readdirSync(gdir).sort()) if (f.endsWith('.jsx')) files.push(`components/${group}/${f}`);
+  for (const f of fs.readdirSync(gdir).sort()) if (f.endsWith('.jsx')) files.push(`components/src/${group}/${f}`);
 }
 
-// parse imports/exports
+// imports (`import { A } from './X.jsx'`) and exports (`export function|const Name`)
 const info = {};
 for (const rel of files) {
   const src = fs.readFileSync(path.join(root, rel), 'utf8');
@@ -34,12 +41,12 @@ for (const rel of files) {
   info[rel] = { src, deps, exports };
 }
 
-// topological order (deps first), stable by original group order
+// dependencies first
 const order = [];
 const seen = new Set();
 function visit(rel, stack = []) {
   if (seen.has(rel)) return;
-  if (stack.includes(rel)) throw new Error('cycle: ' + [...stack, rel].join(' -> '));
+  if (stack.includes(rel)) throw new Error('import cycle: ' + [...stack, rel].join(' -> '));
   for (const d of info[rel].deps) {
     if (!info[d.target]) throw new Error(`${rel}: missing import ${d.target}`);
     visit(d.target, [...stack, rel]);
@@ -49,29 +56,40 @@ function visit(rel, stack = []) {
 }
 files.forEach((f) => visit(f));
 
+// header lists only real components: exports that have a components/<Name>/ folder with a README
+const isComponent = (name) => fs.existsSync(path.join(root, 'components', name, 'README.md'));
+// display order on the Components page = header order; taken from config.json `componentOrder` when present
+const cfgPath = path.join(__dirname, 'config.json');
+const ORDER = fs.existsSync(cfgPath) ? (JSON.parse(fs.readFileSync(cfgPath, 'utf8')).componentOrder || []) : [];
+const rank = (n) => (ORDER.includes(n) ? ORDER.indexOf(n) : ORDER.length);
 const components = [];
 const sourceHashes = {};
 let body = `(() => {\n\nconst __ds_ns = (window.${namespace} = window.${namespace} || {});\n\nconst __ds_scope = {};\n\n(__ds_ns.__errors = __ds_ns.__errors || []);\n\n`;
+const allExports = [];
 
 for (const rel of order) {
   const { src, deps, exports } = info[rel];
   sourceHashes[rel] = crypto.createHash('sha256').update(src).digest('hex').slice(0, 12);
-  let code = src
+  const code = src
     .replace(/^import\s+React\s+from\s+'react';?\s*\n/m, '')
     .replace(/^import\s+\{[^}]+\}\s+from\s+'\.[^']+';?\s*\n/gm, '')
     .replace(/^export\s+(function|const)\s/gm, '$1 ');
-  const out = babel.transformSync(code, {
-    babelrc: false, configFile: false, compact: false, retainLines: false,
-    presets: [[presetReact, { runtime: 'classic' }]],
+  const compiled = babel.transformSync(code, {
+    babelrc: false, configFile: false, presets: [[presetReact, { runtime: 'classic' }]],
   }).code;
   const imports = deps.map((d) => `const { ${d.names.join(', ')} } = __ds_scope;\n`).join('');
-  body += `// ${rel}\ntry { (() => {\n${imports}${out}\nObject.assign(__ds_scope, { ${exports.join(', ')} });\n})(); } catch (e) { __ds_ns.__errors.push({ path: ${JSON.stringify(rel)}, error: String((e && e.message) || e) }); }\n\n`;
-  for (const name of exports) components.push({ name, sourcePath: rel });
+  body += `// ${rel}\ntry { (() => {\n${imports}${compiled}\nObject.assign(__ds_scope, { ${exports.join(', ')} });\n})(); } catch (e) { __ds_ns.__errors.push({ path: ${JSON.stringify(rel)}, error: String((e && e.message) || e) }); }\n\n`;
+  for (const name of exports) {
+    allExports.push(name);
+    if (isComponent(name)) components.push({ name, sourcePath: rel });
+  }
 }
-for (const c of components) body += `__ds_ns.${c.name} = __ds_scope.${c.name};\n\n`;
+for (const name of allExports) body += `__ds_ns.${name} = __ds_scope.${name};\n\n`;
 body += '})();\n';
 
+components.sort((x, y) => rank(x.name) - rank(y.name));
 const header = { format: 4, namespace, components, sourceHashes, inlinedExternals: [], unexposedExports: [] };
-fs.writeFileSync(out, `/* @ds-bundle: ${JSON.stringify(header).replace(/\*\//g, '*\\/')} */\n\n` + body);
-console.log(`built ${order.length} files, ${components.length} exports -> ${out}`);
-console.log('order:', order.join(', '));
+const text = `/* @ds-bundle: ${JSON.stringify(header).replace(/\*\//g, '*\\/')} */\n\n` + body;
+if (/<\/script|<!--/i.test(text)) throw new Error('bundle contains </script or <!-- (breaks inline use)');
+fs.writeFileSync(out, text);
+console.log(`built ${order.length} files → ${path.relative(REPO, out)} (${components.length} components, ${allExports.length} exports)`);
